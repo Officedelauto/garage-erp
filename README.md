@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Garage ERP
 
-## Getting Started
+Gestion de garage automobile : clients, véhicules, stock, devis/factures conformes, tableau de bord, et SAV intelligent (DeepSeek).
 
-First, run the development server:
+## Stack
+
+Next.js 16 (App Router) + TypeScript, PostgreSQL + Prisma, Tailwind CSS.
+
+## Installation locale
+
+### 1. Prérequis
+
+- Node.js 20.9+ (idéalement 22+)
+- PostgreSQL (local ou distant)
+
+### 2. Dépendances
+
+```bash
+npm install --legacy-peer-deps
+```
+
+> `--legacy-peer-deps` contourne un bug connu de `npm install` sur certains graphes de dépendances (Arborist). Sans ce flag, l'installation peut échouer avec `Cannot read properties of null (reading 'edgesOut')`.
+
+### 3. Variables d'environnement
+
+Copier `.env.example` vers `.env` (à créer si absent) et renseigner :
+
+```bash
+DATABASE_URL="postgresql://user:password@localhost:5432/garage_erp?schema=public"
+SESSION_SECRET="<générer avec: openssl rand -base64 32>"
+DEEPSEEK_API_KEY="sk-..."   # optionnel, requis pour le module SAV intelligent
+```
+
+### 4. Base de données
+
+```bash
+npx prisma migrate deploy   # applique les migrations
+npm run seed                # crée un compte admin + une entreprise par défaut
+```
+
+Compte créé par le seed : `admin@garage.local` / `changeme123` (à changer après connexion — pas d'écran dédié pour l'instant, à mettre à jour directement en base ou via une future page profil).
+
+### 5. Lancer le projet
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Points de vigilance / travail restant
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Facturation électronique (réforme France 2026-2027)** : les factures générées sont légalement correctes (mentions obligatoires, numérotation séquentielle, PDF) mais **ne sont pas encore connectées à une PDP** (Plateforme de Dématérialisation Partenaire) ni au format Factur-X. À faire avant l'échéance réglementaire applicable à l'entreprise.
+- **Réglages entreprise** (`/parametres`) : à compléter avec les vraies informations (SIRET, TVA, IBAN) avant d'émettre de vraies factures — ces informations sont figées sur chaque document au moment de sa finalisation.
+- **SAV intelligent** (`/sav`) : nécessite une clé API DeepSeek valide (`DEEPSEEK_API_KEY`) pour fonctionner.
+- **Commande vocale** : non implémentée.
