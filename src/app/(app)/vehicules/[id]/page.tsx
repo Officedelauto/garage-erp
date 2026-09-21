@@ -4,13 +4,16 @@ import { verifySession } from "@/lib/dal";
 import { VehicleForm } from "@/components/vehicles/vehicle-form";
 import { updateVehicle, deleteVehicle } from "@/lib/actions/vehicles";
 import { DeleteButton } from "@/components/shared/delete-button";
-import { clientDisplayName, formatEur } from "@/lib/utils";
+import { clientDisplayName, formatDate, formatEur } from "@/lib/utils";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await verifySession();
   const { id } = await params;
 
-  const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id },
+    include: { notesLog: { orderBy: { createdAt: "desc" } } },
+  });
   if (!vehicle) notFound();
 
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "desc" } });
@@ -64,6 +67,27 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           notes: vehicle.notes ?? "",
         }}
       />
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Historique des interventions</h2>
+        {vehicle.notesLog.length === 0 ? (
+          <p className="text-sm text-slate-400">Aucune intervention enregistrée.</p>
+        ) : (
+          <ul className="space-y-2">
+            {vehicle.notesLog.map((note) => (
+              <li key={note.id} className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-slate-400">{formatDate(note.createdAt)}</span>
+                  {note.source === "voice" && (
+                    <span className="text-xs text-slate-400">🎙️ ajouté par commande vocale</span>
+                  )}
+                </div>
+                <p className="text-slate-800">{note.content}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

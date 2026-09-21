@@ -98,6 +98,16 @@ model Vehicle {
   updatedAt     DateTime  @updatedAt
 
   documents Document[]
+  notesLog  VehicleNote[]
+}
+
+model VehicleNote {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  content   String
+  source    String   @default("manual")
+  createdAt DateTime @default(now())
 }
 
 model StockItem {

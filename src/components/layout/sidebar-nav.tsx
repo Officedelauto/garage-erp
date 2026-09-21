@@ -12,6 +12,7 @@ const links = [
   { href: "/documents/devis", label: "Devis" },
   { href: "/documents/factures", label: "Factures" },
   { href: "/sav", label: "SAV intelligent" },
+  { href: "/vocal", label: "Assistant vocal" },
   { href: "/parametres", label: "Réglages" },
 ];
 
