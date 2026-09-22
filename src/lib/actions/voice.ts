@@ -81,7 +81,7 @@ export async function processVoiceCommand(_prevState: VoiceCommandState, formDat
   try {
     const deepseek = getDeepSeekClient();
     const completion = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
+      model: "deepseek-flash",
       response_format: { type: "json_object" },
       temperature: 0,
       messages: [

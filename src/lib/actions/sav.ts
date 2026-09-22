@@ -58,7 +58,7 @@ export async function generateSavMessage(_prevState: SavFormState, formData: For
   try {
     const openai = getDeepSeekClient();
     const completion = await openai.chat.completions.create({
-      model: "deepseek-chat",
+      model: "deepseek-flash",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
