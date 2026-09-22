@@ -30,7 +30,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 className="font-heading text-xl font-semibold text-ink-900">
           {vehicle.plate} — {vehicle.brand} {vehicle.model}
         </h1>
         <DeleteButton action={boundDelete} confirmMessage="Supprimer ce véhicule ?" />

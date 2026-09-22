@@ -160,7 +160,7 @@ export function DocumentForm({
           </Button>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-xl border border-ink-900/10 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>

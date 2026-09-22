@@ -16,13 +16,13 @@ export default async function InvoicesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-slate-900">Factures</h1>
+        <h1 className="font-heading text-xl font-semibold text-ink-900">Factures</h1>
         <Link href="/documents/factures/new">
           <Button>Nouvelle facture</Button>
         </Link>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-ink-900/10 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
@@ -35,7 +35,7 @@ export default async function InvoicesPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {invoices.map((doc) => (
-              <tr key={doc.id} className="hover:bg-slate-50">
+              <tr key={doc.id} className="hover:bg-brand-50/40">
                 <td className="px-4 py-2">
                   <Link href={`/documents/factures/${doc.id}`} className="font-medium text-slate-900 hover:underline">
                     {doc.number ?? "Brouillon"}

@@ -34,7 +34,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 className="font-heading text-xl font-semibold text-ink-900">
           Facture {document.number ?? "(brouillon)"}
         </h1>
         <div className="flex items-center gap-2">

@@ -17,7 +17,7 @@ export default async function NewVehiclePage({
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900 mb-4">Nouveau véhicule</h1>
+      <h1 className="font-heading text-xl font-semibold text-ink-900 mb-4">Nouveau véhicule</h1>
       <VehicleForm action={createVehicle} clients={options} defaults={{ clientId }} submitLabel="Créer le véhicule" />
     </div>
   );

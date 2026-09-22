@@ -8,7 +8,7 @@ export default async function SavPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900 mb-1">SAV intelligent</h1>
+      <h1 className="font-heading text-xl font-semibold text-ink-900 mb-1">SAV intelligent</h1>
       <p className="text-sm text-slate-500 mb-4">
         Décris le problème signalé (ou colle le message du client) pour générer un message type prêt à envoyer.
       </p>

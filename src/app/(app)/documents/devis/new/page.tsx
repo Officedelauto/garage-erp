@@ -8,7 +8,7 @@ export default async function NewQuotePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900 mb-4">Nouveau devis</h1>
+      <h1 className="font-heading text-xl font-semibold text-ink-900 mb-4">Nouveau devis</h1>
       <DocumentForm action={action} {...options} submitLabel="Créer le devis" />
     </div>
   );

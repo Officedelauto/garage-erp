@@ -25,7 +25,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 className="font-heading text-xl font-semibold text-ink-900">
           {client.type === "PROFESSIONNEL"
             ? client.companyName
             : `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim()}
@@ -57,7 +57,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <Button variant="outline" size="sm">Ajouter un véhicule</Button>
           </Link>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-xl border border-ink-900/10 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>
@@ -69,7 +69,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </thead>
             <tbody className="divide-y divide-slate-100">
               {client.vehicles.map((v) => (
-                <tr key={v.id} className="hover:bg-slate-50">
+                <tr key={v.id} className="hover:bg-brand-50/40">
                   <td className="px-4 py-2">
                     <Link href={`/vehicules/${v.id}`} className="font-medium text-slate-900 hover:underline">
                       {v.plate}

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Euro, ReceiptText, Car, TriangleAlert } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { clientDisplayName, formatDate, formatEur } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
   await verifySession();
@@ -52,48 +54,55 @@ export default async function DashboardPage() {
   const overdueCount = unpaidInvoices.filter((d) => d.dueDate && d.dueDate < now).length;
   const lowStockItems = stockItems.filter((item) => item.quantity <= item.alertThreshold);
 
+  const stats = [
+    {
+      label: "CA du mois (HT)",
+      value: formatEur(revenueThisMonth),
+      icon: Euro,
+      accent: "bg-brand-50 text-brand-600",
+    },
+    {
+      label: "Factures impayées",
+      value: formatEur(unpaidTotal),
+      sub: `${unpaidInvoices.length} facture(s)${overdueCount > 0 ? `, dont ${overdueCount} en retard` : ""}`,
+      icon: ReceiptText,
+      accent: "bg-red-50 text-red-600",
+    },
+    {
+      label: "Véhicules en atelier",
+      value: vehiclesInProgress.length,
+      sub: "devis ou facture en cours",
+      icon: Car,
+      accent: "bg-blue-50 text-blue-600",
+    },
+    {
+      label: "Alertes stock bas",
+      value: lowStockItems.length,
+      sub: "pièce(s) sous le seuil",
+      icon: TriangleAlert,
+      accent: "bg-amber-50 text-amber-600",
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-slate-900">Tableau de bord</h1>
+      <h1 className="font-heading text-2xl font-semibold text-ink-900">Tableau de bord</h1>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>CA du mois (HT)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-slate-900">{formatEur(revenueThisMonth)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Factures impayées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-slate-900">{formatEur(unpaidTotal)}</p>
-            <p className="text-xs text-slate-500 mt-1">
-              {unpaidInvoices.length} facture(s){overdueCount > 0 && `, dont ${overdueCount} en retard`}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Véhicules en atelier</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-slate-900">{vehiclesInProgress.length}</p>
-            <p className="text-xs text-slate-500 mt-1">devis ou facture en cours</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Alertes stock bas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-slate-900">{lowStockItems.length}</p>
-            <p className="text-xs text-slate-500 mt-1">pièce(s) sous le seuil</p>
-          </CardContent>
-        </Card>
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <CardTitle>{stat.label}</CardTitle>
+                <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", stat.accent)}>
+                  <stat.icon size={16} strokeWidth={2.5} />
+                </span>
+              </div>
+              <p className="font-heading text-2xl font-semibold text-ink-900">{stat.value}</p>
+              {stat.sub && <p className="text-xs text-ink-700/60 mt-1">{stat.sub}</p>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

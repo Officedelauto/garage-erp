@@ -14,13 +14,13 @@ export default async function ClientsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-slate-900">Clients</h1>
+        <h1 className="font-heading text-xl font-semibold text-ink-900">Clients</h1>
         <Link href="/clients/new">
           <Button>Nouveau client</Button>
         </Link>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-ink-900/10 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
@@ -33,7 +33,7 @@ export default async function ClientsPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {clients.map((client) => (
-              <tr key={client.id} className="hover:bg-slate-50">
+              <tr key={client.id} className="hover:bg-brand-50/40">
                 <td className="px-4 py-2">
                   <Link href={`/clients/${client.id}`} className="text-slate-900 font-medium hover:underline">
                     {client.type === "PROFESSIONNEL"

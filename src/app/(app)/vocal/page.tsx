@@ -6,7 +6,7 @@ export default async function VoicePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900 mb-1">Assistant vocal</h1>
+      <h1 className="font-heading text-xl font-semibold text-ink-900 mb-1">Assistant vocal</h1>
       <p className="text-sm text-slate-500 mb-4">
         Appuyez sur le micro et parlez : ajoutez une note véhicule, créez une fiche client, ou demandez des
         informations sur un véhicule.

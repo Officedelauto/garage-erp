@@ -11,14 +11,14 @@ export function LoginForm() {
   return (
     <form action={action} className="space-y-4">
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-slate-300">Email</Label>
         <Input id="email" name="email" type="email" placeholder="admin@garage.local" required />
       </div>
       <div>
-        <Label htmlFor="password">Mot de passe</Label>
+        <Label htmlFor="password" className="text-slate-300">Mot de passe</Label>
         <Input id="password" name="password" type="password" required />
       </div>
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state?.error && <p className="text-sm text-red-400">{state.error}</p>}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Connexion..." : "Se connecter"}
       </Button>

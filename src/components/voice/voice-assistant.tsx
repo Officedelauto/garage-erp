@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { processVoiceCommand } from "@/lib/actions/voice";
 import { Button } from "@/components/ui/button";
 
-type Status = "idle" | "recording" | "processing";
+type Status = "idle" | "recording";
 
 function pickExtension(mimeType: string) {
   if (mimeType.includes("mp4")) return "mp4";
@@ -50,7 +50,7 @@ export function VoiceAssistant() {
         const formData = new FormData();
         formData.set("audio", file);
 
-        setStatus("processing");
+        setStatus("idle");
         startTransition(() => {
           formAction(formData);
         });
@@ -68,11 +68,7 @@ export function VoiceAssistant() {
     mediaRecorderRef.current?.stop();
   }
 
-  useEffect(() => {
-    if (state !== undefined) setStatus("idle");
-  }, [state]);
-
-  const processing = status === "processing" || isPending;
+  const processing = isPending;
 
   return (
     <div className="max-w-xl space-y-4">
@@ -114,11 +110,9 @@ export function VoiceAssistant() {
 }
 
 function VoiceResponse({ text }: { text: string }) {
-  const spokenRef = useRef<string | null>(null);
-  if (spokenRef.current !== text) {
-    spokenRef.current = text;
+  useEffect(() => {
     speak(text);
-  }
+  }, [text]);
 
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">

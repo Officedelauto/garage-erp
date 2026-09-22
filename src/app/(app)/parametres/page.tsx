@@ -8,7 +8,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900 mb-1">Réglages de l&apos;entreprise</h1>
+      <h1 className="font-heading text-xl font-semibold text-ink-900 mb-1">Réglages de l&apos;entreprise</h1>
       <p className="text-sm text-slate-500 mb-4">
         Ces informations apparaissent sur les devis et factures. Le numéro de TVA n&apos;est requis que si vous êtes
         assujetti (sinon la mention &quot;TVA non applicable, art. 293 B du CGI&quot; sera ajoutée automatiquement).
