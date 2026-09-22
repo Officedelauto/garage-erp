@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/session";
 
-const protectedPrefixes = ["/dashboard", "/clients", "/vehicules", "/stock", "/documents", "/sav", "/parametres", "/vocal"];
+const protectedPrefixes = [
+  "/dashboard",
+  "/clients",
+  "/vehicules",
+  "/stock",
+  "/documents",
+  "/atelier",
+  "/sav",
+  "/siv",
+  "/parametres",
+  "/vocal",
+  "/compte",
+];
 const publicRoutes = ["/login"];
 
 export default async function proxy(req: NextRequest) {
