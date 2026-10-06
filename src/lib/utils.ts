@@ -42,12 +42,17 @@ export function yearsSince(date: Date | string | null | undefined) {
   return diffMs / (1000 * 60 * 60 * 24 * 365.25);
 }
 
-export function clientDisplayName(client: {
-  type: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  companyName?: string | null;
-}) {
+export function clientDisplayName(
+  client:
+    | {
+        type: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        companyName?: string | null;
+      }
+    | null
+) {
+  if (!client) return "Sans client (en stock)";
   if (client.type === "PROFESSIONNEL") return client.companyName || "—";
   return `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim() || "—";
 }

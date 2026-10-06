@@ -86,7 +86,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         action={boundUpdate}
         clients={options}
         defaults={{
-          clientId: vehicle.clientId,
+          clientId: vehicle.clientId ?? "",
           plate: vehicle.plate,
           stockNumber: vehicle.stockNumber ?? "",
           brand: vehicle.brand,

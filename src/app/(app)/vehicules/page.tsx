@@ -40,9 +40,13 @@ export default async function VehiclesPage() {
                 </td>
                 <td className="px-4 py-2 text-slate-600">{v.brand} {v.model}</td>
                 <td className="px-4 py-2 text-slate-600">
-                  <Link href={`/clients/${v.clientId}`} className="hover:underline">
-                    {clientDisplayName(v.client)}
-                  </Link>
+                  {v.clientId ? (
+                    <Link href={`/clients/${v.clientId}`} className="hover:underline">
+                      {clientDisplayName(v.client)}
+                    </Link>
+                  ) : (
+                    <span className="text-slate-400">{clientDisplayName(null)}</span>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-slate-600">{v.mileage ? `${v.mileage} km` : "—"}</td>
               </tr>

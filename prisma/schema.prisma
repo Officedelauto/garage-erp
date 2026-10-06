@@ -82,8 +82,8 @@ enum FuelType {
 
 model Vehicle {
   id                      String    @id @default(cuid())
-  clientId                String
-  client                  Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId                String?
+  client                  Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
   plate                   String    @unique
   stockNumber             String?
   brand                   String

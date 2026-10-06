@@ -23,15 +23,18 @@ function frDate(d: Date | string | null | undefined) {
 
 export type AttestationPdfProps = {
   company: { name: string; address: string; postalCode: string; city: string; siret: string; phone?: string | null; email?: string | null };
-  client: { type: string; firstName?: string | null; lastName?: string | null; companyName?: string | null; address?: string | null; postalCode?: string | null; city?: string | null };
+  client: { type: string; firstName?: string | null; lastName?: string | null; companyName?: string | null; address?: string | null; postalCode?: string | null; city?: string | null } | null;
   vehicle: { plate: string; brand: string; model: string; vin?: string | null };
   intervention: { content: string; mileage?: number | null; performedAt?: Date | string | null };
   issuedAt: Date;
 };
 
 export function AttestationPdf({ company, client, vehicle, intervention, issuedAt }: AttestationPdfProps) {
-  const clientName =
-    client.type === "PROFESSIONNEL" ? client.companyName : `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim();
+  const clientName = client
+    ? client.type === "PROFESSIONNEL"
+      ? client.companyName
+      : `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim()
+    : "Véhicule en stock (sans client)";
 
   return (
     <PdfDocument>

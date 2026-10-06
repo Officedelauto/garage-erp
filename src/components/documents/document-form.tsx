@@ -48,7 +48,7 @@ export function DocumentForm({
 }: {
   action: (state: DocumentFormState, formData: FormData) => Promise<DocumentFormState>;
   clients: { id: string; label: string }[];
-  vehicles: { id: string; clientId: string; label: string }[];
+  vehicles: { id: string; clientId: string | null; label: string }[];
   stockItems: StockOption[];
   defaults?: {
     clientId?: string;

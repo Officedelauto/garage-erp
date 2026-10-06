@@ -67,11 +67,9 @@ export function VehicleForm({
   return (
     <form action={formAction} className="space-y-4 max-w-2xl">
       <div>
-        <Label htmlFor="clientId">Client</Label>
-        <Select id="clientId" name="clientId" defaultValue={d.clientId} required>
-          <option value="" disabled>
-            Sélectionner un client
-          </option>
+        <Label htmlFor="clientId">Client (optionnel)</Label>
+        <Select id="clientId" name="clientId" defaultValue={d.clientId}>
+          <option value="">Aucun — véhicule en stock</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.label}

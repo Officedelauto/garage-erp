@@ -9,7 +9,7 @@ import { verifySession } from "@/lib/dal";
 const FUEL_TYPES = ["ESSENCE", "DIESEL", "HYBRIDE", "ELECTRIQUE", "GPL", "AUTRE"] as const;
 
 const VehicleSchema = z.object({
-  clientId: z.string().min(1, "Client requis"),
+  clientId: z.string().trim().optional(),
   plate: z.string().trim().min(1, "Immatriculation requise").toUpperCase(),
   stockNumber: z.string().trim().optional(),
   brand: z.string().trim().min(1, "Marque requise"),
@@ -30,7 +30,7 @@ export type VehicleFormState = { error?: string } | undefined;
 
 function parseVehicleForm(formData: FormData) {
   return VehicleSchema.safeParse({
-    clientId: formData.get("clientId"),
+    clientId: formData.get("clientId") || undefined,
     plate: formData.get("plate"),
     stockNumber: formData.get("stockNumber") || undefined,
     brand: formData.get("brand"),
@@ -60,10 +60,13 @@ export async function createVehicle(_prevState: VehicleFormState, formData: Form
     return { error: "Un véhicule avec cette immatriculation existe déjà." };
   }
 
-  const vehicle = await prisma.vehicle.create({ data: parsed.data });
+  const { clientId, ...rest } = parsed.data;
+  const vehicle = await prisma.vehicle.create({
+    data: clientId ? { ...rest, client: { connect: { id: clientId } } } : rest,
+  });
 
   revalidatePath("/vehicules");
-  revalidatePath(`/clients/${parsed.data.clientId}`);
+  if (clientId) revalidatePath(`/clients/${clientId}`);
   redirect(`/vehicules/${vehicle.id}`);
 }
 
@@ -79,11 +82,15 @@ export async function updateVehicle(id: string, _prevState: VehicleFormState, fo
     return { error: "Un véhicule avec cette immatriculation existe déjà." };
   }
 
-  await prisma.vehicle.update({ where: { id }, data: parsed.data });
+  const { clientId, ...rest } = parsed.data;
+  await prisma.vehicle.update({
+    where: { id },
+    data: { ...rest, client: clientId ? { connect: { id: clientId } } : { disconnect: true } },
+  });
 
   revalidatePath("/vehicules");
   revalidatePath(`/vehicules/${id}`);
-  revalidatePath(`/clients/${parsed.data.clientId}`);
+  if (clientId) revalidatePath(`/clients/${clientId}`);
   redirect(`/vehicules/${id}`);
 }
 
@@ -91,6 +98,6 @@ export async function deleteVehicle(id: string) {
   await verifySession();
   const vehicle = await prisma.vehicle.delete({ where: { id } });
   revalidatePath("/vehicules");
-  revalidatePath(`/clients/${vehicle.clientId}`);
+  if (vehicle.clientId) revalidatePath(`/clients/${vehicle.clientId}`);
   redirect("/vehicules");
 }

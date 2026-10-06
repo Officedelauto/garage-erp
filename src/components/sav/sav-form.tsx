@@ -11,7 +11,7 @@ export function SavForm({
   vehicles,
 }: {
   clients: { id: string; label: string }[];
-  vehicles: { id: string; clientId: string; label: string }[];
+  vehicles: { id: string; clientId: string | null; label: string }[];
 }) {
   const [state, formAction, pending] = useActionState(generateSavMessage, undefined);
   const [clientId, setClientId] = useState("");
