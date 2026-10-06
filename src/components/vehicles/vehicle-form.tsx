@@ -8,10 +8,14 @@ import { Input, Label, Select, Textarea } from "@/components/ui/input";
 type VehicleDefaults = {
   clientId: string;
   plate: string;
+  stockNumber: string;
   brand: string;
   model: string;
+  color: string;
   vin: string;
-  year: string;
+  firstRegistrationDate: string;
+  technicalInspectionDate: string;
+  fiscalHorsepower: string;
   mileage: string;
   fuelType: string;
   purchasePrice: string;
@@ -22,10 +26,14 @@ type VehicleDefaults = {
 const emptyDefaults: VehicleDefaults = {
   clientId: "",
   plate: "",
+  stockNumber: "",
   brand: "",
   model: "",
+  color: "",
   vin: "",
-  year: "",
+  firstRegistrationDate: "",
+  technicalInspectionDate: "",
+  fiscalHorsepower: "",
   mileage: "",
   fuelType: "AUTRE",
   purchasePrice: "",
@@ -78,8 +86,8 @@ export function VehicleForm({
           <Input id="plate" name="plate" defaultValue={d.plate} required className="uppercase" />
         </div>
         <div>
-          <Label htmlFor="vin">VIN (n° de série)</Label>
-          <Input id="vin" name="vin" defaultValue={d.vin} />
+          <Label htmlFor="stockNumber">N° VO (stock)</Label>
+          <Input id="stockNumber" name="stockNumber" defaultValue={d.stockNumber} />
         </div>
         <div>
           <Label htmlFor="brand">Marque</Label>
@@ -90,8 +98,29 @@ export function VehicleForm({
           <Input id="model" name="model" defaultValue={d.model} required />
         </div>
         <div>
-          <Label htmlFor="year">Année</Label>
-          <Input id="year" name="year" type="number" defaultValue={d.year} />
+          <Label htmlFor="color">Couleur</Label>
+          <Input id="color" name="color" defaultValue={d.color} />
+        </div>
+        <div>
+          <Label htmlFor="vin">VIN (n° de série)</Label>
+          <Input id="vin" name="vin" defaultValue={d.vin} />
+        </div>
+        <div>
+          <Label htmlFor="firstRegistrationDate">1ère mise en circulation</Label>
+          <Input id="firstRegistrationDate" name="firstRegistrationDate" type="date" defaultValue={d.firstRegistrationDate} />
+        </div>
+        <div>
+          <Label htmlFor="technicalInspectionDate">Date du dernier contrôle technique</Label>
+          <Input
+            id="technicalInspectionDate"
+            name="technicalInspectionDate"
+            type="date"
+            defaultValue={d.technicalInspectionDate}
+          />
+        </div>
+        <div>
+          <Label htmlFor="fiscalHorsepower">Puissance fiscale (CV)</Label>
+          <Input id="fiscalHorsepower" name="fiscalHorsepower" type="number" defaultValue={d.fiscalHorsepower} />
         </div>
         <div>
           <Label htmlFor="mileage">Kilométrage</Label>

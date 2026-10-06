@@ -13,14 +13,17 @@ export type VoiceCommandState =
   | undefined;
 
 const IntentSchema = z.object({
-  intent: z.enum(["ADD_VEHICLE_NOTE", "CREATE_CLIENT", "QUERY_VEHICLE", "UNKNOWN"]),
+  intent: z.enum(["ADD_VEHICLE_NOTE", "CREATE_CLIENT", "QUERY_VEHICLE", "QUERY_STOCK", "UNKNOWN"]),
   vehiclePlate: z.string().nullable().optional(),
   vehicleHint: z.string().nullable().optional(),
   noteContent: z.string().nullable().optional(),
+  noteMileage: z.coerce.number().int().nullable().optional(),
+  noteDate: z.string().nullable().optional(),
   clientFirstName: z.string().nullable().optional(),
   clientLastName: z.string().nullable().optional(),
   clientPhone: z.string().nullable().optional(),
   clientEmail: z.string().nullable().optional(),
+  stockQuery: z.string().nullable().optional(),
 });
 
 function normalizePlate(value: string) {
@@ -87,22 +90,26 @@ export async function processVoiceCommand(_prevState: VoiceCommandState, formDat
       messages: [
         {
           role: "system",
-          content: `Tu es l'assistant vocal d'un garage automobile. Analyse la phrase de l'utilisateur (transcrite depuis de la voix, donc potentiellement imparfaite) et renvoie UNIQUEMENT un objet JSON avec ces champs :
+          content: `Tu es l'assistant vocal d'un garage automobile. La date du jour est ${new Date().toISOString().slice(0, 10)}. Analyse la phrase de l'utilisateur (transcrite depuis de la voix, donc potentiellement imparfaite) et renvoie UNIQUEMENT un objet JSON avec ces champs :
 {
-  "intent": "ADD_VEHICLE_NOTE" | "CREATE_CLIENT" | "QUERY_VEHICLE" | "UNKNOWN",
+  "intent": "ADD_VEHICLE_NOTE" | "CREATE_CLIENT" | "QUERY_VEHICLE" | "QUERY_STOCK" | "UNKNOWN",
   "vehiclePlate": string ou null (la plaque d'immatriculation mentionnée, telle qu'entendue),
   "vehicleHint": string ou null (marque/modèle mentionné si pas de plaque claire),
   "noteContent": string ou null (pour ADD_VEHICLE_NOTE : reformule proprement l'intervention/révision effectuée, à la 3e personne, prête à archiver),
+  "noteMileage": number ou null (kilométrage mentionné pour l'intervention),
+  "noteDate": string ou null (date de l'intervention au format AAAA-MM-JJ, déduite si besoin de "aujourd'hui"/"hier" par rapport à la date du jour),
   "clientFirstName": string ou null,
   "clientLastName": string ou null,
   "clientPhone": string ou null,
-  "clientEmail": string ou null
+  "clientEmail": string ou null,
+  "stockQuery": string ou null (pour QUERY_STOCK : la pièce ou la taille de pneu recherchée, ex: "pneu 205 55 16" ou "plaquettes de frein avant")
 }
 
 Règles :
-- "ADD_VEHICLE_NOTE" : l'utilisateur signale une intervention/révision/réparation faite sur un véhicule (ex: "indique que la révision est faite sur la Clio AB123CD").
+- "ADD_VEHICLE_NOTE" : l'utilisateur signale une intervention/révision/réparation faite sur un véhicule (ex: "vidange faite à 45000 km le 3 octobre sur la Clio AB123CD").
 - "CREATE_CLIENT" : l'utilisateur veut créer une fiche client (ex: "crée une fiche client pour Jean Dupont, 0612345678").
 - "QUERY_VEHICLE" : l'utilisateur demande des informations sur un véhicule (prix, marge, kilométrage, propriétaire...).
+- "QUERY_STOCK" : l'utilisateur demande si une pièce ou un pneu est disponible en stock.
 - "UNKNOWN" si la demande ne correspond à aucun cas ou est incompréhensible.
 Réponds uniquement avec le JSON, sans texte autour.`,
         },
@@ -128,12 +135,22 @@ Réponds uniquement avec le JSON, sans texte autour.`,
           };
         }
         const content = intentData.noteContent?.trim() || transcript;
+        const performedAt = intentData.noteDate ? new Date(intentData.noteDate) : undefined;
+        const mileage = intentData.noteMileage ?? undefined;
         await prisma.vehicleNote.create({
-          data: { vehicleId: vehicle.id, content, source: "voice" },
+          data: { vehicleId: vehicle.id, content, mileage, performedAt, source: "voice" },
         });
+        const extra = [
+          mileage ? `${mileage} km` : null,
+          performedAt && !Number.isNaN(performedAt.getTime())
+            ? `le ${performedAt.toLocaleDateString("fr-FR")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" ");
         return {
           transcript,
-          response: `Note ajoutée sur ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) : ${content}`,
+          response: `Note ajoutée sur ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) : ${content}${extra ? ` (${extra})` : ""}`,
         };
       }
 
@@ -178,10 +195,33 @@ Réponds uniquement avec le JSON, sans texte autour.`,
         return { transcript, response: parts.join(" ") };
       }
 
+      case "QUERY_STOCK": {
+        const query = intentData.stockQuery?.trim();
+        if (!query) {
+          return { transcript, response: "Merci de préciser la pièce ou la taille de pneu recherchée." };
+        }
+        const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+        const items = await prisma.stockItem.findMany();
+        const matches = items.filter((item) => {
+          const haystack = `${item.reference} ${item.name} ${item.description ?? ""}`.toLowerCase();
+          return terms.every((term) => haystack.includes(term));
+        });
+
+        if (matches.length === 0) {
+          return { transcript, response: `Aucune pièce trouvée pour "${query}" dans le stock.` };
+        }
+
+        const summary = matches
+          .slice(0, 5)
+          .map((item) => `${item.name} (${item.reference}) : ${item.quantity} en stock`)
+          .join(". ");
+        return { transcript, response: summary };
+      }
+
       default:
         return {
           transcript,
-          response: "Je n'ai pas compris la demande. Vous pouvez ajouter une note véhicule, créer un client, ou demander des infos sur un véhicule.",
+          response: "Je n'ai pas compris la demande. Vous pouvez ajouter une note véhicule, créer un client, interroger un véhicule, ou vérifier une pièce en stock.",
         };
     }
   } catch (err) {

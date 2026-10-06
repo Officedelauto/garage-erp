@@ -14,22 +14,22 @@ datasource db {
 // Réglages de l'entreprise (mono-garage pour le MVP)
 // -----------------------------------------------------------------------------
 model Company {
-  id               String   @id @default(cuid())
-  name             String
-  address          String
-  postalCode       String
-  city             String
-  siret            String
-  vatNumber        String?
-  phone            String?
-  email            String?
-  iban             String?
-  quotePrefix      String   @default("DEV")
-  invoicePrefix    String   @default("FA")
-  nextQuoteNumber  Int      @default(1)
-  nextInvoiceNumber Int     @default(1)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  address           String
+  postalCode        String
+  city              String
+  siret             String
+  vatNumber         String?
+  phone             String?
+  email             String?
+  iban              String?
+  quotePrefix       String   @default("DEV")
+  invoicePrefix     String   @default("FA")
+  nextQuoteNumber   Int      @default(1)
+  nextInvoiceNumber Int      @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 enum UserRole {
@@ -81,48 +81,64 @@ enum FuelType {
 }
 
 model Vehicle {
-  id            String    @id @default(cuid())
-  clientId      String
-  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  plate         String    @unique
-  brand         String
-  model         String
-  vin           String?
-  year          Int?
-  mileage       Int?
-  fuelType      FuelType  @default(AUTRE)
-  purchasePrice Decimal?  @db.Decimal(10, 2)
-  salePrice     Decimal?  @db.Decimal(10, 2)
-  notes         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                      String    @id @default(cuid())
+  clientId                String
+  client                  Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  plate                   String    @unique
+  stockNumber             String?
+  brand                   String
+  model                   String
+  color                   String?
+  vin                     String?
+  firstRegistrationDate   DateTime?
+  technicalInspectionDate DateTime?
+  fiscalHorsepower        Int?
+  mileage                 Int?
+  fuelType                FuelType  @default(AUTRE)
+  purchasePrice           Decimal?  @db.Decimal(10, 2)
+  salePrice               Decimal?  @db.Decimal(10, 2)
+  notes                   String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   documents Document[]
   notesLog  VehicleNote[]
+  photos    VehiclePhoto[]
 }
 
 model VehicleNote {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  content     String
+  mileage     Int?
+  performedAt DateTime?
+  source      String    @default("manual")
+  createdAt   DateTime  @default(now())
+}
+
+model VehiclePhoto {
   id        String   @id @default(cuid())
   vehicleId String
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  content   String
-  source    String   @default("manual")
+  url       String
+  isPrimary Boolean  @default(false)
   createdAt DateTime @default(now())
 }
 
 model StockItem {
-  id             String   @id @default(cuid())
-  reference      String   @unique
-  name           String
-  description    String?
-  purchasePriceHT Decimal @db.Decimal(10, 2)
-  salePriceHT    Decimal  @db.Decimal(10, 2)
-  vatRate        Decimal  @default(20) @db.Decimal(5, 2)
-  quantity       Int      @default(0)
-  alertThreshold Int      @default(1)
-  unit           String   @default("unité")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  reference       String   @unique
+  name            String
+  description     String?
+  purchasePriceHT Decimal  @db.Decimal(10, 2)
+  salePriceHT     Decimal  @db.Decimal(10, 2)
+  vatRate         Decimal  @default(20) @db.Decimal(5, 2)
+  quantity        Int      @default(0)
+  alertThreshold  Int      @default(1)
+  unit            String   @default("unité")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   documentLines DocumentLine[]
 }
@@ -140,36 +156,36 @@ enum DocumentStatus {
 }
 
 model Document {
-  id          String         @id @default(cuid())
-  kind        DocumentKind
-  number      String?        @unique
-  status      DocumentStatus @default(DRAFT)
+  id     String         @id @default(cuid())
+  kind   DocumentKind
+  number String?        @unique
+  status DocumentStatus @default(DRAFT)
 
-  clientId    String
-  client      Client         @relation(fields: [clientId], references: [id])
-  vehicleId   String?
-  vehicle     Vehicle?       @relation(fields: [vehicleId], references: [id])
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
-  issueDate   DateTime?
-  dueDate     DateTime?
-  paidAt      DateTime?
+  issueDate DateTime?
+  dueDate   DateTime?
+  paidAt    DateTime?
 
   // Copie des mentions légales de l'entreprise au moment de l'émission,
   // pour garder une facture immuable même si les réglages changent ensuite.
   companySnapshot Json?
 
-  notes       String?
+  notes String?
 
-  totalHT     Decimal        @default(0) @db.Decimal(10, 2)
-  totalTVA    Decimal        @default(0) @db.Decimal(10, 2)
-  totalTTC    Decimal        @default(0) @db.Decimal(10, 2)
+  totalHT  Decimal @default(0) @db.Decimal(10, 2)
+  totalTVA Decimal @default(0) @db.Decimal(10, 2)
+  totalTTC Decimal @default(0) @db.Decimal(10, 2)
 
-  convertedFromQuoteId String? @unique
+  convertedFromQuoteId String?   @unique
   convertedFromQuote   Document? @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
   convertedInvoice     Document? @relation("QuoteToInvoice")
 
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   lines DocumentLine[]
 

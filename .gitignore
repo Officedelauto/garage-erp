@@ -48,3 +48,6 @@ next-env.d.ts
 /.claude/
 /.windsurf/
 skills-lock.json
+
+# uploaded user content (local filesystem storage for MVP)
+/public/uploads/

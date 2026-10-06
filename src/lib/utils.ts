@@ -25,6 +25,23 @@ export function formatDate(date: Date | string | null | undefined) {
   return dateFormatter.format(new Date(date));
 }
 
+export function formatDateInput(date: Date | string | null | undefined) {
+  if (!date) return "";
+  return new Date(date).toISOString().slice(0, 10);
+}
+
+export function monthsSince(date: Date | string | null | undefined) {
+  if (!date) return null;
+  const diffMs = Date.now() - new Date(date).getTime();
+  return diffMs / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+export function yearsSince(date: Date | string | null | undefined) {
+  if (!date) return null;
+  const diffMs = Date.now() - new Date(date).getTime();
+  return diffMs / (1000 * 60 * 60 * 24 * 365.25);
+}
+
 export function clientDisplayName(client: {
   type: string;
   firstName?: string | null;

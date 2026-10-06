@@ -100,9 +100,10 @@ export function VoiceAssistant() {
       <div className="text-xs text-slate-400 space-y-1">
         <p>Exemples de commandes :</p>
         <ul className="list-disc list-inside">
-          <li>« Indique que la révision est terminée sur la Clio AB-123-CD »</li>
+          <li>« Vidange faite à 45 000 km aujourd&apos;hui sur la Clio AB-123-CD »</li>
           <li>« Crée une fiche client pour Jean Dupont, téléphone 06 12 34 56 78 »</li>
           <li>« Quel est le prix de vente et la marge de la Clio AB-123-CD ? »</li>
+          <li>« Est-ce que j&apos;ai un pneu 205 55 16 en stock ? »</li>
         </ul>
       </div>
     </div>
