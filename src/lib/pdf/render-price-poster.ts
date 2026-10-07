@@ -33,6 +33,7 @@ export async function renderPricePosterPdf(vehicleId: string) {
       firstRegistrationDate: vehicle.firstRegistrationDate,
       fuelType: vehicle.fuelType,
       fiscalHorsepower: vehicle.fiscalHorsepower,
+      co2Emissions: vehicle.co2Emissions,
       color: vehicle.color,
       photoPath,
     })

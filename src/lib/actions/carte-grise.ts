@@ -17,21 +17,23 @@ const ExtractedSchema = z.object({
   color: z.string().trim().nullable().optional(),
   firstRegistrationDate: z.string().trim().nullable().optional(),
   fiscalHorsepower: z.coerce.number().int().nullable().optional(),
+  co2Emissions: z.coerce.number().int().nullable().optional(),
   fuelType: z.enum(FUEL_TYPES).nullable().optional(),
 });
 
 export type CarteGriseData = z.infer<typeof ExtractedSchema>;
 export type CarteGriseState = { error?: string; data?: CarteGriseData } | undefined;
 
-const SYSTEM_PROMPT = `Tu analyses la photo d'une carte grise française (certificat d'immatriculation). Les champs officiels sont codés par des lettres :
+const SYSTEM_PROMPT = `Tu analyses la photo d'un certificat d'immatriculation de véhicule (carte grise). Le format des champs par lettres/chiffres est harmonisé au niveau de l'Union européenne (directive 1999/37/CE) : le document peut donc être français ou provenir d'un autre pays de l'UE (allemand, espagnol, etc.), avec des libellés traduits mais les mêmes codes :
 - A : numéro d'immatriculation
 - B : date de première immatriculation (souvent au format JJ.MM.AAAA)
 - D.1 : marque
 - D.3 : dénomination commerciale (modèle)
 - E : numéro d'identification du véhicule (VIN, 17 caractères alphanumériques)
 - P.3 : énergie / carburant
-- P.6 : puissance fiscale (en CV)
-La couleur du véhicule est parfois indiquée près du bloc d'identification, sans code de champ fixe.
+- P.6 : puissance fiscale (en CV) — absent sur certains documents non français, dans ce cas laisse null
+- V.7 : émissions de CO2 en g/km
+La couleur du véhicule est parfois indiquée près du bloc d'identification, sans code de champ fixe (ex. "Farbe" en allemand).
 
 Réponds UNIQUEMENT avec un objet JSON strictement conforme à ce schéma, sans aucun texte autour :
 {
@@ -42,10 +44,11 @@ Réponds UNIQUEMENT avec un objet JSON strictement conforme à ce schéma, sans 
   "color": string ou null,
   "firstRegistrationDate": string au format AAAA-MM-JJ ou null,
   "fiscalHorsepower": nombre entier ou null,
+  "co2Emissions": nombre entier (g/km) ou null,
   "fuelType": une valeur parmi "ESSENCE", "DIESEL", "HYBRIDE", "ELECTRIQUE", "GPL", "AUTRE", ou null
 }
 
-Si un champ est illisible, absent ou si l'image ne ressemble pas à une carte grise, mets sa valeur à null. N'invente jamais une valeur que tu ne peux pas lire. N'extrais jamais le nom ou l'adresse du titulaire.`;
+Si un champ est illisible, absent ou si l'image ne ressemble pas à un certificat d'immatriculation, mets sa valeur à null. N'invente jamais une valeur que tu ne peux pas lire. N'extrais jamais le nom ou l'adresse du titulaire.`;
 
 export async function extractCarteGrise(_prevState: CarteGriseState, formData: FormData): Promise<CarteGriseState> {
   await verifySession();

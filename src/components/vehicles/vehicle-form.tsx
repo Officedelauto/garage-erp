@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { VehicleFormState } from "@/lib/actions/vehicles";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { VEHICLE_OPTIONS } from "@/lib/vehicle-options";
+import { VEHICLE_COLORS } from "@/lib/vehicle-colors";
 
 export type VehicleDefaults = {
   clientId: string;
@@ -17,6 +18,7 @@ export type VehicleDefaults = {
   firstRegistrationDate: string;
   technicalInspectionDate: string;
   fiscalHorsepower: string;
+  co2Emissions: string;
   mileage: string;
   fuelType: string;
   purchasePrice: string;
@@ -36,6 +38,7 @@ const emptyDefaults: VehicleDefaults = {
   firstRegistrationDate: "",
   technicalInspectionDate: "",
   fiscalHorsepower: "",
+  co2Emissions: "",
   mileage: "",
   fuelType: "AUTRE",
   purchasePrice: "",
@@ -66,6 +69,25 @@ export function VehicleForm({
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const d = { ...emptyDefaults, ...defaults };
+
+  const colorOptions = d.color && !(VEHICLE_COLORS as readonly string[]).includes(d.color) ? [d.color, ...VEHICLE_COLORS] : VEHICLE_COLORS;
+
+  const [customOptions, setCustomOptions] = useState<string[]>(
+    d.options.filter((o) => !(VEHICLE_OPTIONS as readonly string[]).includes(o))
+  );
+  const [customOptionInput, setCustomOptionInput] = useState("");
+
+  function addCustomOption() {
+    const value = customOptionInput.trim();
+    if (value && !customOptions.includes(value)) {
+      setCustomOptions((prev) => [...prev, value]);
+    }
+    setCustomOptionInput("");
+  }
+
+  function removeCustomOption(value: string) {
+    setCustomOptions((prev) => prev.filter((o) => o !== value));
+  }
 
   return (
     <form action={formAction} className="space-y-4 max-w-2xl">
@@ -100,7 +122,14 @@ export function VehicleForm({
         </div>
         <div>
           <Label htmlFor="color">Couleur</Label>
-          <Input id="color" name="color" defaultValue={d.color} />
+          <Select id="color" name="color" defaultValue={d.color}>
+            <option value="">—</option>
+            {colorOptions.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </Select>
         </div>
         <div>
           <Label htmlFor="vin">VIN (n° de série)</Label>
@@ -122,6 +151,10 @@ export function VehicleForm({
         <div>
           <Label htmlFor="fiscalHorsepower">Puissance fiscale (CV)</Label>
           <Input id="fiscalHorsepower" name="fiscalHorsepower" type="number" defaultValue={d.fiscalHorsepower} />
+        </div>
+        <div>
+          <Label htmlFor="co2Emissions">Émissions de CO2 (g/km)</Label>
+          <Input id="co2Emissions" name="co2Emissions" type="number" defaultValue={d.co2Emissions} />
         </div>
         <div>
           <Label htmlFor="mileage">Kilométrage</Label>
@@ -165,6 +198,48 @@ export function VehicleForm({
               {option}
             </label>
           ))}
+        </div>
+
+        <div className="mt-3">
+          <Label htmlFor="customOptionInput">Ajouter une option personnalisée</Label>
+          <div className="flex gap-2">
+            <Input
+              id="customOptionInput"
+              value={customOptionInput}
+              onChange={(e) => setCustomOptionInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustomOption();
+                }
+              }}
+              placeholder="Ex : Caméra 360°, Sièges massants..."
+            />
+            <Button type="button" variant="outline" size="sm" onClick={addCustomOption}>
+              Ajouter
+            </Button>
+          </div>
+          {customOptions.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {customOptions.map((option) => (
+                <span
+                  key={option}
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-3 py-1 text-xs text-brand-800"
+                >
+                  {option}
+                  <input type="hidden" name="options" value={option} />
+                  <button
+                    type="button"
+                    onClick={() => removeCustomOption(option)}
+                    className="text-brand-600 hover:text-brand-900"
+                    aria-label={`Retirer ${option}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

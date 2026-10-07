@@ -38,6 +38,7 @@ export async function generateVehicleListing(
     vehicle.mileage != null ? `Kilométrage : ${vehicle.mileage} km` : null,
     `Carburant : ${FUEL_LABELS[vehicle.fuelType] ?? vehicle.fuelType}`,
     vehicle.fiscalHorsepower ? `Puissance fiscale : ${vehicle.fiscalHorsepower} CV` : null,
+    vehicle.co2Emissions != null ? `Émissions de CO2 : ${vehicle.co2Emissions} g/km` : null,
     vehicle.color ? `Couleur : ${vehicle.color}` : null,
     vehicle.salePrice != null ? `Prix de vente TTC : ${vehicle.salePrice.toString()} €` : null,
     vehicle.options.length > 0 ? `Options et équipements : ${vehicle.options.join(", ")}` : null,
@@ -46,7 +47,7 @@ export async function generateVehicleListing(
     .filter(Boolean)
     .join("\n");
 
-  const systemPrompt = `Tu es un vendeur automobile expérimenté en France. Tu rédiges des annonces de vente percutantes, honnêtes et bien structurées en français pour un site comme La Centrale ou Leboncoin. Mets en avant les points forts, reste factuel (n'invente aucune caractéristique non fournie), et termine par une formule d'appel à contact. Ne fournis que le texte de l'annonce, sans titre de section ni commentaire autour.`;
+  const systemPrompt = `Tu es un vendeur automobile expérimenté en France. Tu rédiges des annonces de vente percutantes, honnêtes et bien structurées en français pour un site comme La Centrale ou Leboncoin. Mets en avant les points forts, reste factuel (n'invente aucune caractéristique non fournie), et termine par une formule d'appel à contact. Si les émissions de CO2 sont fournies, mentionne-les explicitement : leur affichage est obligatoire dans les annonces de vente de véhicules. Ne fournis que le texte de l'annonce, sans titre de section ni commentaire autour.`;
 
   const userPrompt = `Rédige une annonce de vente pour ce véhicule :\n${facts}`;
 

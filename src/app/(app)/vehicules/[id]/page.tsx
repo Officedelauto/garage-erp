@@ -97,6 +97,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           firstRegistrationDate: formatDateInput(vehicle.firstRegistrationDate),
           technicalInspectionDate: formatDateInput(vehicle.technicalInspectionDate),
           fiscalHorsepower: vehicle.fiscalHorsepower?.toString() ?? "",
+          co2Emissions: vehicle.co2Emissions?.toString() ?? "",
           mileage: vehicle.mileage?.toString() ?? "",
           fuelType: vehicle.fuelType,
           purchasePrice: vehicle.purchasePrice?.toString() ?? "",

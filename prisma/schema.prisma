@@ -94,6 +94,7 @@ model Vehicle {
   firstRegistrationDate   DateTime?
   technicalInspectionDate DateTime?
   fiscalHorsepower        Int?
+  co2Emissions            Int?
   mileage                 Int?
   fuelType                FuelType  @default(AUTRE)
   purchasePrice           Decimal?  @db.Decimal(10, 2)

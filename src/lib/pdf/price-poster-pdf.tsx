@@ -68,6 +68,7 @@ export type PricePosterProps = {
   firstRegistrationDate?: Date | string | null;
   fuelType?: string;
   fiscalHorsepower?: number | null;
+  co2Emissions?: number | null;
   color?: string | null;
   photoPath?: string | null;
 };
@@ -96,6 +97,7 @@ export function PricePosterPdf({
   firstRegistrationDate,
   fuelType,
   fiscalHorsepower,
+  co2Emissions,
   color,
   photoPath,
 }: PricePosterProps) {
@@ -105,6 +107,7 @@ export function PricePosterPdf({
   const specs = [
     fuelType ? { label: "Carburant", value: FUEL_LABELS[fuelType] ?? fuelType } : null,
     fiscalHorsepower ? { label: "CV fiscaux", value: `${fiscalHorsepower} CV` } : null,
+    co2Emissions != null ? { label: "CO2", value: `${pdfNumber(co2Emissions)} g/km` } : null,
     color ? { label: "Couleur", value: color } : null,
     { label: "Immatriculation", value: plate },
   ].filter(Boolean) as { label: string; value: string }[];

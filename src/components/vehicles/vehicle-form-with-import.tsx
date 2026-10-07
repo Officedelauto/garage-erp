@@ -15,6 +15,7 @@ function toFormDefaults(data: CarteGriseData): Partial<VehicleDefaults> {
   if (data.color) out.color = data.color;
   if (data.firstRegistrationDate) out.firstRegistrationDate = data.firstRegistrationDate;
   if (data.fiscalHorsepower != null) out.fiscalHorsepower = String(data.fiscalHorsepower);
+  if (data.co2Emissions != null) out.co2Emissions = String(data.co2Emissions);
   if (data.fuelType) out.fuelType = data.fuelType;
   return out;
 }
