@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { VEHICLE_OPTIONS } from "@/lib/vehicle-options";
 
-type VehicleDefaults = {
+export type VehicleDefaults = {
   clientId: string;
   plate: string;
   stockNumber: string;

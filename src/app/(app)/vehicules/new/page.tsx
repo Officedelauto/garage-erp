@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
-import { VehicleForm } from "@/components/vehicles/vehicle-form";
+import { VehicleFormWithImport } from "@/components/vehicles/vehicle-form-with-import";
 import { createVehicle } from "@/lib/actions/vehicles";
 import { clientDisplayName } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ export default async function NewVehiclePage({
   return (
     <div>
       <h1 className="font-heading text-xl font-semibold text-ink-900 mb-4">Nouveau véhicule</h1>
-      <VehicleForm action={createVehicle} clients={options} defaults={{ clientId }} submitLabel="Créer le véhicule" />
+      <VehicleFormWithImport action={createVehicle} clients={options} defaults={{ clientId }} submitLabel="Créer le véhicule" />
     </div>
   );
 }

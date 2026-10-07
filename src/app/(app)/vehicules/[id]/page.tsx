@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
-import { VehicleForm } from "@/components/vehicles/vehicle-form";
+import { VehicleFormWithImport } from "@/components/vehicles/vehicle-form-with-import";
 import { VehicleHistory } from "@/components/vehicles/vehicle-history";
 import { VehiclePhotos } from "@/components/vehicles/vehicle-photos";
 import { VehicleListing } from "@/components/vehicles/vehicle-listing";
@@ -83,7 +83,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         <VehiclePhotos vehicleId={vehicle.id} photos={vehicle.photos} />
       </div>
 
-      <VehicleForm
+      <VehicleFormWithImport
         action={boundUpdate}
         clients={options}
         defaults={{
