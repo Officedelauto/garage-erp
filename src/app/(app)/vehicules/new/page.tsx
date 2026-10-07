@@ -9,7 +9,7 @@ export default async function NewVehiclePage({
 }: {
   searchParams: Promise<{ clientId?: string }>;
 }) {
-  await verifySession();
+  const { role } = await verifySession();
   const { clientId } = await searchParams;
 
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "desc" } });
@@ -18,7 +18,13 @@ export default async function NewVehiclePage({
   return (
     <div>
       <h1 className="font-heading text-xl font-semibold text-ink-900 mb-4">Nouveau véhicule</h1>
-      <VehicleFormWithImport action={createVehicle} clients={options} defaults={{ clientId }} submitLabel="Créer le véhicule" />
+      <VehicleFormWithImport
+        action={createVehicle}
+        clients={options}
+        defaults={{ clientId }}
+        submitLabel="Créer le véhicule"
+        canViewPurchaseInfo={role === "ADMIN"}
+      />
     </div>
   );
 }

@@ -1,39 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import { DEPARTMENTS } from "@/lib/departments";
 import { REGIONAL_CV_RATES, FIXED_REGISTRATION_FEES } from "@/lib/regional-tax-rates";
 import { Input, Label, Select } from "@/components/ui/input";
-import { formatEur } from "@/lib/utils";
+import { formatEur, yearsSince } from "@/lib/utils";
 
-export function CarteGriseSimulator({ fiscalHorsepower }: { fiscalHorsepower: number | null }) {
-  const regions = Object.keys(REGIONAL_CV_RATES);
-  const [region, setRegion] = useState(regions[0]);
-  const [ratePerCv, setRatePerCv] = useState<string>(
-    REGIONAL_CV_RATES[regions[0]] != null ? String(REGIONAL_CV_RATES[regions[0]]) : ""
-  );
+function rateForDepartment(code: string) {
+  const dept = DEPARTMENTS.find((d) => d.code === code);
+  if (!dept) return null;
+  return REGIONAL_CV_RATES[dept.region] ?? null;
+}
+
+export function CarteGriseSimulator({
+  fiscalHorsepower,
+  firstRegistrationDate,
+}: {
+  fiscalHorsepower: number | null;
+  firstRegistrationDate: Date | string | null;
+}) {
+  const [departmentCode, setDepartmentCode] = useState(DEPARTMENTS[0].code);
+  const [ratePerCv, setRatePerCv] = useState<string>(() => {
+    const defaultRate = rateForDepartment(DEPARTMENTS[0].code);
+    return defaultRate != null ? String(defaultRate) : "";
+  });
   const [cv, setCv] = useState<string>(fiscalHorsepower != null ? String(fiscalHorsepower) : "");
 
-  function handleRegionChange(value: string) {
-    setRegion(value);
-    const defaultRate = REGIONAL_CV_RATES[value];
+  function handleDepartmentChange(code: string) {
+    setDepartmentCode(code);
+    const defaultRate = rateForDepartment(code);
     setRatePerCv(defaultRate != null ? String(defaultRate) : "");
   }
+
+  const vehicleAgeYears = yearsSince(firstRegistrationDate);
+  const isOverTenYears = vehicleAgeYears != null && vehicleAgeYears > 10;
 
   const rateNumber = Number(ratePerCv);
   const cvNumber = Number(cv);
   const hasInputs = ratePerCv !== "" && cv !== "" && !Number.isNaN(rateNumber) && !Number.isNaN(cvNumber);
-  const regionalTax = hasInputs ? rateNumber * cvNumber : null;
+  const fullRegionalTax = hasInputs ? rateNumber * cvNumber : null;
+  const regionalTax = fullRegionalTax != null ? (isOverTenYears ? fullRegionalTax / 2 : fullRegionalTax) : null;
   const total = regionalTax != null ? regionalTax + FIXED_REGISTRATION_FEES : null;
 
   return (
     <div className="rounded-md border border-slate-200 p-3 space-y-3 max-w-2xl">
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <Label htmlFor="cgRegion">Région</Label>
-          <Select id="cgRegion" value={region} onChange={(e) => handleRegionChange(e.target.value)}>
-            {regions.map((r) => (
-              <option key={r} value={r}>
-                {r}
+          <Label htmlFor="cgDepartment">Département</Label>
+          <Select id="cgDepartment" value={departmentCode} onChange={(e) => handleDepartmentChange(e.target.value)}>
+            {DEPARTMENTS.map((d) => (
+              <option key={d.code} value={d.code}>
+                {d.code} - {d.name}
               </option>
             ))}
           </Select>
@@ -55,10 +72,18 @@ export function CarteGriseSimulator({ fiscalHorsepower }: { fiscalHorsepower: nu
         </div>
       </div>
 
+      {isOverTenYears && (
+        <p className="text-xs text-brand-700 bg-brand-50 rounded px-2 py-1">
+          Véhicule de plus de 10 ans : demi-tarif appliqué sur la taxe régionale.
+        </p>
+      )}
+
       {total != null ? (
         <div className="text-sm space-y-1">
           <div className="flex justify-between text-slate-600">
-            <span>Taxe régionale ({cvNumber} CV × {formatEur(rateNumber)})</span>
+            <span>
+              Taxe régionale ({cvNumber} CV × {formatEur(rateNumber)}{isOverTenYears ? " ÷ 2" : ""})
+            </span>
             <span>{formatEur(regionalTax!)}</span>
           </div>
           <div className="flex justify-between text-slate-600">

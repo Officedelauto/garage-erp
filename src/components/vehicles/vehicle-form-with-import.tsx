@@ -25,11 +25,13 @@ export function VehicleFormWithImport({
   clients,
   defaults: initialDefaults,
   submitLabel,
+  canViewPurchaseInfo = true,
 }: {
   action: (state: VehicleFormState, formData: FormData) => Promise<VehicleFormState>;
   clients: { id: string; label: string }[];
   defaults?: Partial<VehicleDefaults>;
   submitLabel?: string;
+  canViewPurchaseInfo?: boolean;
 }) {
   const [defaults, setDefaults] = useState(initialDefaults);
   const [version, setVersion] = useState(0);
@@ -42,7 +44,14 @@ export function VehicleFormWithImport({
           setVersion((v) => v + 1);
         }}
       />
-      <VehicleForm key={version} action={action} clients={clients} defaults={defaults} submitLabel={submitLabel} />
+      <VehicleForm
+        key={version}
+        action={action}
+        clients={clients}
+        defaults={defaults}
+        submitLabel={submitLabel}
+        canViewPurchaseInfo={canViewPurchaseInfo}
+      />
     </div>
   );
 }

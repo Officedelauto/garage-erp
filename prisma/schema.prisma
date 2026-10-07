@@ -99,6 +99,8 @@ model Vehicle {
   fuelType                FuelType  @default(AUTRE)
   purchaseDate            DateTime?
   purchasePrice           Decimal?  @db.Decimal(10, 2)
+  sellerType              ClientType?
+  sellerName              String?
   salePrice               Decimal?  @db.Decimal(10, 2)
   options                 String[]  @default([])
   adCopy                  String?   @db.Text

@@ -23,6 +23,8 @@ export type VehicleDefaults = {
   fuelType: string;
   purchaseDate: string;
   purchasePrice: string;
+  sellerType: string;
+  sellerName: string;
   salePrice: string;
   options: string[];
   notes: string;
@@ -44,6 +46,8 @@ const emptyDefaults: VehicleDefaults = {
   fuelType: "AUTRE",
   purchaseDate: "",
   purchasePrice: "",
+  sellerType: "",
+  sellerName: "",
   salePrice: "",
   options: [],
   notes: "",
@@ -58,16 +62,23 @@ const FUEL_LABELS: Record<string, string> = {
   AUTRE: "Autre",
 };
 
+const SELLER_TYPE_LABELS: Record<string, string> = {
+  PARTICULIER: "Particulier",
+  PROFESSIONNEL: "Professionnel",
+};
+
 export function VehicleForm({
   action,
   clients,
   defaults = emptyDefaults,
   submitLabel = "Enregistrer",
+  canViewPurchaseInfo = true,
 }: {
   action: (state: VehicleFormState, formData: FormData) => Promise<VehicleFormState>;
   clients: { id: string; label: string }[];
   defaults?: Partial<VehicleDefaults>;
   submitLabel?: string;
+  canViewPurchaseInfo?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const d = { ...emptyDefaults, ...defaults };
@@ -176,18 +187,43 @@ export function VehicleForm({
 
       <div className="grid grid-cols-2 gap-4 rounded-md bg-slate-50 p-3">
         <div>
-          <Label htmlFor="purchaseDate">Date d&apos;achat</Label>
-          <Input id="purchaseDate" name="purchaseDate" type="date" defaultValue={d.purchaseDate} />
-        </div>
-        <div>
-          <Label htmlFor="purchasePrice">Prix d&apos;achat (€)</Label>
-          <Input id="purchasePrice" name="purchasePrice" type="number" step="0.01" defaultValue={d.purchasePrice} />
-        </div>
-        <div>
           <Label htmlFor="salePrice">Prix de vente (€)</Label>
           <Input id="salePrice" name="salePrice" type="number" step="0.01" defaultValue={d.salePrice} />
         </div>
       </div>
+
+      {canViewPurchaseInfo && (
+        <div className="space-y-4 rounded-md border border-amber-200 bg-amber-50/50 p-3">
+          <p className="text-xs font-medium text-amber-700">
+            Informations d&apos;achat (confidentiel — visible uniquement par les comptes administrateur)
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="purchaseDate">Date d&apos;achat</Label>
+              <Input id="purchaseDate" name="purchaseDate" type="date" defaultValue={d.purchaseDate} />
+            </div>
+            <div>
+              <Label htmlFor="purchasePrice">Prix d&apos;achat (€)</Label>
+              <Input id="purchasePrice" name="purchasePrice" type="number" step="0.01" defaultValue={d.purchasePrice} />
+            </div>
+            <div>
+              <Label htmlFor="sellerType">Vendeur (fournisseur)</Label>
+              <Select id="sellerType" name="sellerType" defaultValue={d.sellerType}>
+                <option value="">—</option>
+                {Object.entries(SELLER_TYPE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="sellerName">Nom du fournisseur</Label>
+              <Input id="sellerName" name="sellerName" defaultValue={d.sellerName} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <Label>Options et équipements</Label>

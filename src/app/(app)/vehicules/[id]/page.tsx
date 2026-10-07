@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { clientDisplayName, formatDateInput, formatEur, monthsSince, yearsSince } from "@/lib/utils";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await verifySession();
+  const { role } = await verifySession();
+  const canViewPurchaseInfo = role === "ADMIN";
   const { id } = await params;
 
   const vehicle = await prisma.vehicle.findUnique({
@@ -65,7 +66,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {margin != null && (
+      {canViewPurchaseInfo && margin != null ? (
         <div className="rounded-md border border-slate-200 bg-white p-3 text-sm inline-flex gap-6">
           <span>
             Achat : <strong>{formatEur(vehicle.purchasePrice!.toString())}</strong>
@@ -77,6 +78,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             Marge : <strong>{formatEur(margin)}</strong>
           </span>
         </div>
+      ) : (
+        vehicle.salePrice != null && (
+          <div className="rounded-md border border-slate-200 bg-white p-3 text-sm inline-flex gap-6">
+            <span>
+              Vente : <strong>{formatEur(vehicle.salePrice.toString())}</strong>
+            </span>
+          </div>
+        )
       )}
 
       <div>
@@ -87,6 +96,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       <VehicleFormWithImport
         action={boundUpdate}
         clients={options}
+        canViewPurchaseInfo={canViewPurchaseInfo}
         defaults={{
           clientId: vehicle.clientId ?? "",
           plate: vehicle.plate,
@@ -103,6 +113,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           fuelType: vehicle.fuelType,
           purchaseDate: formatDateInput(vehicle.purchaseDate),
           purchasePrice: vehicle.purchasePrice?.toString() ?? "",
+          sellerType: vehicle.sellerType ?? "",
+          sellerName: vehicle.sellerName ?? "",
           salePrice: vehicle.salePrice?.toString() ?? "",
           options: vehicle.options,
           notes: vehicle.notes ?? "",
@@ -121,7 +133,10 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Simulation du prix de la carte grise</h2>
-        <CarteGriseSimulator fiscalHorsepower={vehicle.fiscalHorsepower} />
+        <CarteGriseSimulator
+          fiscalHorsepower={vehicle.fiscalHorsepower}
+          firstRegistrationDate={vehicle.firstRegistrationDate}
+        />
       </div>
     </div>
   );

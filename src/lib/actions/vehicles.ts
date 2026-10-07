@@ -7,6 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 
 const FUEL_TYPES = ["ESSENCE", "DIESEL", "HYBRIDE", "ELECTRIQUE", "GPL", "AUTRE"] as const;
+const SELLER_TYPES = ["PARTICULIER", "PROFESSIONNEL"] as const;
+
+// Champs confidentiels (prix d'achat, fournisseur) réservés aux comptes ADMIN : on les
+// retire même si un utilisateur STAFF parvenait à les inclure dans le formulaire soumis.
+const PURCHASE_FIELDS = ["purchaseDate", "purchasePrice", "sellerType", "sellerName"] as const;
 
 const VehicleSchema = z.object({
   clientId: z.string().trim().optional(),
@@ -24,6 +29,8 @@ const VehicleSchema = z.object({
   fuelType: z.enum(FUEL_TYPES),
   purchaseDate: z.coerce.date().optional(),
   purchasePrice: z.coerce.number().optional(),
+  sellerType: z.enum(SELLER_TYPES).optional(),
+  sellerName: z.string().trim().optional(),
   salePrice: z.coerce.number().optional(),
   options: z.array(z.string()).optional(),
   notes: z.string().trim().optional(),
@@ -48,14 +55,23 @@ function parseVehicleForm(formData: FormData) {
     fuelType: formData.get("fuelType") || "AUTRE",
     purchaseDate: formData.get("purchaseDate") || undefined,
     purchasePrice: formData.get("purchasePrice") || undefined,
+    sellerType: formData.get("sellerType") || undefined,
+    sellerName: formData.get("sellerName") || undefined,
     salePrice: formData.get("salePrice") || undefined,
     options: formData.getAll("options") as string[],
     notes: formData.get("notes") || undefined,
   });
 }
 
+function stripPurchaseFieldsIfNotAdmin<T extends Record<string, unknown>>(data: T, role: string): T {
+  if (role === "ADMIN") return data;
+  const copy = { ...data };
+  for (const field of PURCHASE_FIELDS) delete copy[field];
+  return copy;
+}
+
 export async function createVehicle(_prevState: VehicleFormState, formData: FormData): Promise<VehicleFormState> {
-  await verifySession();
+  const { role } = await verifySession();
   const parsed = parseVehicleForm(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Champs invalides." };
@@ -66,7 +82,7 @@ export async function createVehicle(_prevState: VehicleFormState, formData: Form
     return { error: "Un véhicule avec cette immatriculation existe déjà." };
   }
 
-  const { clientId, ...rest } = parsed.data;
+  const { clientId, ...rest } = stripPurchaseFieldsIfNotAdmin(parsed.data, role);
   const vehicle = await prisma.vehicle.create({
     data: clientId ? { ...rest, client: { connect: { id: clientId } } } : rest,
   });
@@ -77,7 +93,7 @@ export async function createVehicle(_prevState: VehicleFormState, formData: Form
 }
 
 export async function updateVehicle(id: string, _prevState: VehicleFormState, formData: FormData): Promise<VehicleFormState> {
-  await verifySession();
+  const { role } = await verifySession();
   const parsed = parseVehicleForm(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Champs invalides." };
@@ -88,7 +104,7 @@ export async function updateVehicle(id: string, _prevState: VehicleFormState, fo
     return { error: "Un véhicule avec cette immatriculation existe déjà." };
   }
 
-  const { clientId, ...rest } = parsed.data;
+  const { clientId, ...rest } = stripPurchaseFieldsIfNotAdmin(parsed.data, role);
   await prisma.vehicle.update({
     where: { id },
     data: { ...rest, client: clientId ? { connect: { id: clientId } } : { disconnect: true } },
