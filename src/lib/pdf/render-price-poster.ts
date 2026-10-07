@@ -16,10 +16,15 @@ export async function renderPricePosterPdf(vehicleId: string) {
 
   const primaryPhoto = vehicle.photos[0];
   const photoPath = primaryPhoto ? path.join(process.cwd(), "public", primaryPhoto.url) : null;
+  const logoPath = company.logoUrl ? path.join(process.cwd(), "public", company.logoUrl) : null;
 
   const buffer = await renderToBuffer(
     PricePosterPdf({
       companyName: company.name,
+      companySiret: company.siret,
+      companyAddress: company.address,
+      companyCity: `${company.postalCode} ${company.city}`.trim(),
+      logoPath,
       brand: vehicle.brand,
       model: vehicle.model,
       plate: vehicle.plate,

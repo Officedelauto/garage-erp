@@ -24,6 +24,7 @@ model Company {
   phone             String?
   email             String?
   iban              String?
+  logoUrl           String?
   quotePrefix       String   @default("DEV")
   invoicePrefix     String   @default("FA")
   nextQuoteNumber   Int      @default(1)
@@ -97,6 +98,8 @@ model Vehicle {
   fuelType                FuelType  @default(AUTRE)
   purchasePrice           Decimal?  @db.Decimal(10, 2)
   salePrice               Decimal?  @db.Decimal(10, 2)
+  options                 String[]  @default([])
+  adCopy                  String?   @db.Text
   notes                   String?
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt

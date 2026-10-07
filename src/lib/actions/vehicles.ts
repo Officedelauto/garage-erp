@@ -23,6 +23,7 @@ const VehicleSchema = z.object({
   fuelType: z.enum(FUEL_TYPES),
   purchasePrice: z.coerce.number().optional(),
   salePrice: z.coerce.number().optional(),
+  options: z.array(z.string()).optional(),
   notes: z.string().trim().optional(),
 });
 
@@ -44,6 +45,7 @@ function parseVehicleForm(formData: FormData) {
     fuelType: formData.get("fuelType") || "AUTRE",
     purchasePrice: formData.get("purchasePrice") || undefined,
     salePrice: formData.get("salePrice") || undefined,
+    options: formData.getAll("options") as string[],
     notes: formData.get("notes") || undefined,
   });
 }

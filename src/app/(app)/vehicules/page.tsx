@@ -4,10 +4,36 @@ import { verifySession } from "@/lib/dal";
 import { Button } from "@/components/ui/button";
 import { clientDisplayName } from "@/lib/utils";
 
-export default async function VehiclesPage() {
+const SORTABLE_FIELDS = ["brand", "stockNumber"] as const;
+type SortField = (typeof SORTABLE_FIELDS)[number];
+
+function isSortField(value: string | undefined): value is SortField {
+  return SORTABLE_FIELDS.includes(value as SortField);
+}
+
+function sortLink(field: SortField, label: string, activeSort: SortField | null, activeDir: "asc" | "desc") {
+  const nextDir = activeSort === field && activeDir === "asc" ? "desc" : "asc";
+  const arrow = activeSort === field ? (activeDir === "asc" ? " ↑" : " ↓") : "";
+  return (
+    <Link href={`/vehicules?sort=${field}&dir=${nextDir}`} className="hover:underline">
+      {label}
+      {arrow}
+    </Link>
+  );
+}
+
+export default async function VehiclesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; dir?: string }>;
+}) {
   await verifySession();
+  const { sort, dir } = await searchParams;
+  const activeSort = isSortField(sort) ? sort : null;
+  const activeDir: "asc" | "desc" = dir === "desc" ? "desc" : "asc";
+
   const vehicles = await prisma.vehicle.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: activeSort ? { [activeSort]: activeDir } : { createdAt: "desc" },
     include: { client: true },
   });
 
@@ -25,7 +51,8 @@ export default async function VehiclesPage() {
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
               <th className="px-4 py-2 font-medium">Immatriculation</th>
-              <th className="px-4 py-2 font-medium">Marque / Modèle</th>
+              <th className="px-4 py-2 font-medium">{sortLink("brand", "Marque / Modèle", activeSort, activeDir)}</th>
+              <th className="px-4 py-2 font-medium">{sortLink("stockNumber", "N° VO", activeSort, activeDir)}</th>
               <th className="px-4 py-2 font-medium">Client</th>
               <th className="px-4 py-2 font-medium">Kilométrage</th>
             </tr>
@@ -39,6 +66,7 @@ export default async function VehiclesPage() {
                   </Link>
                 </td>
                 <td className="px-4 py-2 text-slate-600">{v.brand} {v.model}</td>
+                <td className="px-4 py-2 text-slate-600">{v.stockNumber || "—"}</td>
                 <td className="px-4 py-2 text-slate-600">
                   {v.clientId ? (
                     <Link href={`/clients/${v.clientId}`} className="hover:underline">
@@ -53,7 +81,7 @@ export default async function VehiclesPage() {
             ))}
             {vehicles.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
                   Aucun véhicule pour l&apos;instant.
                 </td>
               </tr>

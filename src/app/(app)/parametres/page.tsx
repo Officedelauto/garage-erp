@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { CompanyForm } from "./company-form";
+import { CompanyLogoForm } from "@/components/settings/company-logo-form";
 
 export default async function SettingsPage() {
   await verifySession();
@@ -13,6 +14,11 @@ export default async function SettingsPage() {
         Ces informations apparaissent sur les devis et factures. Le numéro de TVA n&apos;est requis que si vous êtes
         assujetti (sinon la mention &quot;TVA non applicable, art. 293 B du CGI&quot; sera ajoutée automatiquement).
       </p>
+      <div className="mb-6">
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Logo</h2>
+        <CompanyLogoForm logoUrl={company?.logoUrl ?? null} />
+      </div>
+
       <CompanyForm
         defaults={{
           name: company?.name ?? "",

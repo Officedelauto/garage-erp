@@ -1,4 +1,5 @@
 import { Document as PdfDocument, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { pdfEur } from "@/lib/pdf/pdf-format";
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: "Helvetica", color: "#1e293b" },
@@ -31,9 +32,7 @@ const LINE_TYPE_LABELS: Record<string, string> = {
   OTHER: "Autre",
 };
 
-function eur(n: number | string) {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(n));
-}
+const eur = pdfEur;
 
 function frDate(d: Date | string | null) {
   if (!d) return "—";

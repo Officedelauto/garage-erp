@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { VehicleFormState } from "@/lib/actions/vehicles";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { VEHICLE_OPTIONS } from "@/lib/vehicle-options";
 
 type VehicleDefaults = {
   clientId: string;
@@ -20,6 +21,7 @@ type VehicleDefaults = {
   fuelType: string;
   purchasePrice: string;
   salePrice: string;
+  options: string[];
   notes: string;
 };
 
@@ -38,6 +40,7 @@ const emptyDefaults: VehicleDefaults = {
   fuelType: "AUTRE",
   purchasePrice: "",
   salePrice: "",
+  options: [],
   notes: "",
 };
 
@@ -144,6 +147,24 @@ export function VehicleForm({
         <div>
           <Label htmlFor="salePrice">Prix de vente (€)</Label>
           <Input id="salePrice" name="salePrice" type="number" step="0.01" defaultValue={d.salePrice} />
+        </div>
+      </div>
+
+      <div>
+        <Label>Options et équipements</Label>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-md border border-slate-200 p-3 sm:grid-cols-3">
+          {VEHICLE_OPTIONS.map((option) => (
+            <label key={option} className="flex items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                name="options"
+                value={option}
+                defaultChecked={d.options.includes(option)}
+                className="h-4 w-4 rounded border-slate-300 text-brand-500 focus:ring-brand-400"
+              />
+              {option}
+            </label>
+          ))}
         </div>
       </div>
 

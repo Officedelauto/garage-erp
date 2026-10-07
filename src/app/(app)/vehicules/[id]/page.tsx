@@ -5,6 +5,7 @@ import { verifySession } from "@/lib/dal";
 import { VehicleForm } from "@/components/vehicles/vehicle-form";
 import { VehicleHistory } from "@/components/vehicles/vehicle-history";
 import { VehiclePhotos } from "@/components/vehicles/vehicle-photos";
+import { VehicleListing } from "@/components/vehicles/vehicle-listing";
 import { updateVehicle, deleteVehicle } from "@/lib/actions/vehicles";
 import { DeleteButton } from "@/components/shared/delete-button";
 import { Badge } from "@/components/ui/badge";
@@ -100,9 +101,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           fuelType: vehicle.fuelType,
           purchasePrice: vehicle.purchasePrice?.toString() ?? "",
           salePrice: vehicle.salePrice?.toString() ?? "",
+          options: vehicle.options,
           notes: vehicle.notes ?? "",
         }}
       />
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Annonce de vente (IA)</h2>
+        <VehicleListing vehicleId={vehicle.id} adCopy={vehicle.adCopy} />
+      </div>
 
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Historique des interventions</h2>
