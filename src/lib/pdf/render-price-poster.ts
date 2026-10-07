@@ -27,6 +27,7 @@ export async function renderPricePosterPdf(vehicleId: string) {
       logoPath,
       brand: vehicle.brand,
       model: vehicle.model,
+      trim: vehicle.trim,
       plate: vehicle.plate,
       price: vehicle.salePrice.toString(),
       mileage: vehicle.mileage,

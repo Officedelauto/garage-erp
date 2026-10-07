@@ -23,7 +23,10 @@ export async function generateVehicleListing(
 ): Promise<ListingState> {
   await verifySession();
 
-  const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+  const [vehicle, company] = await Promise.all([
+    prisma.vehicle.findUnique({ where: { id: vehicleId } }),
+    prisma.company.findFirst(),
+  ]);
   if (!vehicle) {
     return { error: "Véhicule introuvable." };
   }
@@ -34,6 +37,7 @@ export async function generateVehicleListing(
 
   const facts = [
     `Marque et modèle : ${vehicle.brand} ${vehicle.model}`,
+    vehicle.trim ? `Finition / motorisation : ${vehicle.trim}` : null,
     firstRegLabel ? `1ère mise en circulation : ${firstRegLabel}` : null,
     vehicle.mileage != null ? `Kilométrage : ${vehicle.mileage} km` : null,
     `Carburant : ${FUEL_LABELS[vehicle.fuelType] ?? vehicle.fuelType}`,
@@ -47,9 +51,25 @@ export async function generateVehicleListing(
     .filter(Boolean)
     .join("\n");
 
-  const systemPrompt = `Tu es un vendeur automobile expérimenté en France. Tu rédiges des annonces de vente percutantes, honnêtes et bien structurées en français pour un site comme La Centrale ou Leboncoin. Mets en avant les points forts, reste factuel (n'invente aucune caractéristique non fournie), et termine par une formule d'appel à contact. Si les émissions de CO2 sont fournies, mentionne-les explicitement : leur affichage est obligatoire dans les annonces de vente de véhicules. Ne fournis que le texte de l'annonce, sans titre de section ni commentaire autour.`;
+  const garageName = company?.name ?? "notre garage";
+  const contactLines = [
+    company?.name ?? null,
+    company?.phone ? `Tél. ${company.phone}` : null,
+    company?.email ?? null,
+    company && (company.address || company.city) ? `${company.address} — ${company.postalCode} ${company.city}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  const userPrompt = `Rédige une annonce de vente pour ce véhicule :\n${facts}`;
+  const systemPrompt = `Tu rédiges, au nom du garage automobile professionnel "${garageName}", une annonce de vente pour un site comme La Centrale ou Leboncoin. C'est une annonce PROFESSIONNELLE de concessionnaire/garage, pas celle d'un particulier qui vend sa propre voiture : n'utilise jamais "je vends", "ma voiture", "mon véhicule" ni de ton familier. Adopte un ton commercial professionnel, rassurant (garantie, contrôle technique, reprise possible, financement possible si pertinent), à la 3e personne ou au nom de l'entreprise (ex. "${garageName} vous propose..."). Mets en avant les points forts du véhicule, reste factuel (n'invente aucune caractéristique non fournie). Si les émissions de CO2 sont fournies, mentionne-les explicitement : leur affichage est obligatoire dans les annonces de vente de véhicules. Termine OBLIGATOIREMENT l'annonce par un bloc séparé avec les coordonnées complètes de l'entreprise fournies ci-dessous (nom, téléphone, email, adresse), introduit par une formule du type "Contactez-nous :". Ne fournis que le texte de l'annonce, sans titre de section ni commentaire autour.`;
+
+  const userPrompt = [
+    `Rédige une annonce de vente pour ce véhicule :`,
+    facts,
+    contactLines ? `\nCoordonnées de l'entreprise à reprendre en bas de l'annonce :\n${contactLines}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   try {
     const openai = getDeepSeekClient();

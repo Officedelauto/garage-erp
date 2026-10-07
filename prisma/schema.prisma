@@ -89,6 +89,7 @@ model Vehicle {
   stockNumber             String?
   brand                   String
   model                   String
+  trim                    String?
   color                   String?
   vin                     String?
   firstRegistrationDate   DateTime?

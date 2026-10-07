@@ -12,6 +12,7 @@ import { DeleteButton } from "@/components/shared/delete-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { clientDisplayName, formatDateInput, formatEur, monthsSince, yearsSince } from "@/lib/utils";
+import { vehicleStatus, VEHICLE_STATUS_BADGES } from "@/lib/vehicle-status";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { role } = await verifySession();
@@ -52,6 +53,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           <h1 className="font-heading text-xl font-semibold text-ink-900">
             {vehicle.plate} — {vehicle.brand} {vehicle.model}
           </h1>
+          <Badge variant={VEHICLE_STATUS_BADGES[vehicleStatus(vehicle)].variant}>
+            {VEHICLE_STATUS_BADGES[vehicleStatus(vehicle)].label}
+          </Badge>
           {ctWarning && <Badge variant="danger">CT &gt; 6 mois — non valide pour la revente</Badge>}
         </div>
         <div className="flex items-center gap-2">
@@ -103,6 +107,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           stockNumber: vehicle.stockNumber ?? "",
           brand: vehicle.brand,
           model: vehicle.model,
+          trim: vehicle.trim ?? "",
           color: vehicle.color ?? "",
           vin: vehicle.vin ?? "",
           firstRegistrationDate: formatDateInput(vehicle.firstRegistrationDate),

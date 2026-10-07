@@ -13,6 +13,7 @@ export type VehicleDefaults = {
   stockNumber: string;
   brand: string;
   model: string;
+  trim: string;
   color: string;
   vin: string;
   firstRegistrationDate: string;
@@ -36,6 +37,7 @@ const emptyDefaults: VehicleDefaults = {
   stockNumber: "",
   brand: "",
   model: "",
+  trim: "",
   color: "",
   vin: "",
   firstRegistrationDate: "",
@@ -132,6 +134,10 @@ export function VehicleForm({
         <div>
           <Label htmlFor="model">Modèle</Label>
           <Input id="model" name="model" defaultValue={d.model} required />
+        </div>
+        <div>
+          <Label htmlFor="trim">Finition (motorisation / version)</Label>
+          <Input id="trim" name="trim" defaultValue={d.trim} placeholder="Ex : TCe 100 Intens" />
         </div>
         <div>
           <Label htmlFor="color">Couleur</Label>
