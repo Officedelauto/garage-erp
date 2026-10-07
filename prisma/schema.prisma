@@ -97,6 +97,7 @@ model Vehicle {
   co2Emissions            Int?
   mileage                 Int?
   fuelType                FuelType  @default(AUTRE)
+  purchaseDate            DateTime?
   purchasePrice           Decimal?  @db.Decimal(10, 2)
   salePrice               Decimal?  @db.Decimal(10, 2)
   options                 String[]  @default([])

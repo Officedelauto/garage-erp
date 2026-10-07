@@ -21,6 +21,7 @@ export type VehicleDefaults = {
   co2Emissions: string;
   mileage: string;
   fuelType: string;
+  purchaseDate: string;
   purchasePrice: string;
   salePrice: string;
   options: string[];
@@ -41,6 +42,7 @@ const emptyDefaults: VehicleDefaults = {
   co2Emissions: "",
   mileage: "",
   fuelType: "AUTRE",
+  purchaseDate: "",
   purchasePrice: "",
   salePrice: "",
   options: [],
@@ -173,6 +175,10 @@ export function VehicleForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4 rounded-md bg-slate-50 p-3">
+        <div>
+          <Label htmlFor="purchaseDate">Date d&apos;achat</Label>
+          <Input id="purchaseDate" name="purchaseDate" type="date" defaultValue={d.purchaseDate} />
+        </div>
         <div>
           <Label htmlFor="purchasePrice">Prix d&apos;achat (€)</Label>
           <Input id="purchasePrice" name="purchasePrice" type="number" step="0.01" defaultValue={d.purchasePrice} />

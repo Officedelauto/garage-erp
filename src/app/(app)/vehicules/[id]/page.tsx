@@ -6,6 +6,7 @@ import { VehicleFormWithImport } from "@/components/vehicles/vehicle-form-with-i
 import { VehicleHistory } from "@/components/vehicles/vehicle-history";
 import { VehiclePhotos } from "@/components/vehicles/vehicle-photos";
 import { VehicleListing } from "@/components/vehicles/vehicle-listing";
+import { CarteGriseSimulator } from "@/components/vehicles/carte-grise-simulator";
 import { updateVehicle, deleteVehicle } from "@/lib/actions/vehicles";
 import { DeleteButton } from "@/components/shared/delete-button";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           co2Emissions: vehicle.co2Emissions?.toString() ?? "",
           mileage: vehicle.mileage?.toString() ?? "",
           fuelType: vehicle.fuelType,
+          purchaseDate: formatDateInput(vehicle.purchaseDate),
           purchasePrice: vehicle.purchasePrice?.toString() ?? "",
           salePrice: vehicle.salePrice?.toString() ?? "",
           options: vehicle.options,
@@ -115,6 +117,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       <div>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Historique des interventions</h2>
         <VehicleHistory vehicleId={vehicle.id} entries={vehicle.notesLog} />
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Simulation du prix de la carte grise</h2>
+        <CarteGriseSimulator fiscalHorsepower={vehicle.fiscalHorsepower} />
       </div>
     </div>
   );

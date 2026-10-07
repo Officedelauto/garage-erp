@@ -28,7 +28,7 @@ export function CarteGriseUpload({ onExtracted }: { onExtracted: (data: CarteGri
         <input
           type="file"
           name="document"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
           required
           className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-ink-900/5 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-ink-900/10"
         />
@@ -43,8 +43,8 @@ export function CarteGriseUpload({ onExtracted }: { onExtracted: (data: CarteGri
         </p>
       )}
       <p className="text-xs text-slate-400">
-        Prenez en photo ou scannez le recto de la carte grise. L&apos;image est envoyée pour analyse mais n&apos;est
-        pas conservée sur le serveur.
+        Prenez en photo, scannez le recto de la carte grise, ou déposez un PDF (seule la 1ère page est analysée).
+        Le fichier est envoyé pour analyse mais n&apos;est pas conservé sur le serveur.
       </p>
     </div>
   );
