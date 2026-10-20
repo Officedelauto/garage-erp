@@ -1,6 +1,7 @@
 import { Wrench } from "lucide-react";
 import { verifySession } from "@/lib/dal";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { VocalAssistantButton } from "@/components/layout/vocal-assistant-button";
 import { logout } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 
@@ -9,12 +10,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <aside className="w-64 shrink-0 bg-ink-950 p-4 flex flex-col">
-        <div className="mb-6 flex items-center gap-2 px-2">
+      <aside className="sticky top-0 h-screen w-64 shrink-0 overflow-y-auto bg-ink-950 p-4 flex flex-col">
+        <div className="mb-4 flex items-center gap-2 px-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white">
             <Wrench size={16} strokeWidth={2.5} />
           </span>
           <p className="font-heading text-base font-semibold text-white">Garage ERP</p>
+        </div>
+        <div className="mb-4">
+          <VocalAssistantButton />
         </div>
         <div className="flex-1">
           <SidebarNav />
