@@ -118,6 +118,22 @@ export async function updateVehicle(id: string, _prevState: VehicleFormState, fo
   redirect(`/vehicules/${id}`);
 }
 
+export async function clearVehicleReservation(id: string) {
+  await verifySession();
+  await prisma.vehicle.update({
+    where: { id },
+    data: {
+      reservedByClientId: null,
+      depositAmount: null,
+      depositPaymentMethod: null,
+      depositDate: null,
+      reservationOrderId: null,
+    },
+  });
+  revalidatePath("/vehicules");
+  revalidatePath(`/vehicules/${id}`);
+}
+
 export async function deleteVehicle(id: string) {
   await verifySession();
   const vehicle = await prisma.vehicle.delete({ where: { id } });

@@ -7,12 +7,21 @@ import { VehicleHistory } from "@/components/vehicles/vehicle-history";
 import { VehiclePhotos } from "@/components/vehicles/vehicle-photos";
 import { VehicleListing } from "@/components/vehicles/vehicle-listing";
 import { CarteGriseSimulator } from "@/components/vehicles/carte-grise-simulator";
-import { updateVehicle, deleteVehicle } from "@/lib/actions/vehicles";
+import { updateVehicle, deleteVehicle, clearVehicleReservation } from "@/lib/actions/vehicles";
 import { DeleteButton } from "@/components/shared/delete-button";
+import { ConfirmSubmitButton } from "@/components/shared/confirm-submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { clientDisplayName, formatDateInput, formatEur, monthsSince, yearsSince } from "@/lib/utils";
 import { vehicleStatus, VEHICLE_STATUS_BADGES } from "@/lib/vehicle-status";
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  ESPECES: "Espèces",
+  CARTE: "Carte bancaire",
+  CHEQUE: "Chèque",
+  VIREMENT: "Virement",
+  AUTRE: "Autre",
+};
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { role } = await verifySession();
@@ -24,6 +33,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     include: {
       notesLog: { orderBy: { createdAt: "desc" } },
       photos: { orderBy: { createdAt: "asc" } },
+      reservedByClient: true,
+      reservationOrder: true,
     },
   });
   if (!vehicle) notFound();
@@ -33,6 +44,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   const boundUpdate = updateVehicle.bind(null, vehicle.id);
   const boundDelete = deleteVehicle.bind(null, vehicle.id);
+  const boundClearReservation = clearVehicleReservation.bind(null, vehicle.id);
+
+  const status = vehicleStatus(vehicle);
 
   const margin =
     vehicle.purchasePrice != null && vehicle.salePrice != null
@@ -59,6 +73,13 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           {ctWarning && <Badge variant="danger">CT &gt; 6 mois — non valide pour la revente</Badge>}
         </div>
         <div className="flex items-center gap-2">
+          {status !== "VENDU" && (
+            <Link href={`/documents/commandes/new?vehicleId=${vehicle.id}`}>
+              <Button variant="outline" size="sm">
+                Créer un bon de commande
+              </Button>
+            </Link>
+          )}
           {vehicle.salePrice != null && (
             <Link href={`/vehicules/${vehicle.id}/affiche`} target="_blank">
               <Button variant="outline" size="sm">
@@ -69,6 +90,38 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           <DeleteButton action={boundDelete} confirmMessage="Supprimer ce véhicule ?" />
         </div>
       </div>
+
+      {status === "RESERVE" && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-amber-900">
+              Réservé par {vehicle.reservedByClient ? clientDisplayName(vehicle.reservedByClient) : "—"}
+            </p>
+            <ConfirmSubmitButton
+              action={boundClearReservation}
+              confirmMessage="Annuler la réservation de ce véhicule ? Le véhicule redeviendra disponible en stock."
+              label="Annuler la réservation"
+              variant="destructive"
+            />
+          </div>
+          <div className="flex gap-6 text-amber-800">
+            {vehicle.depositAmount != null && (
+              <span>
+                Acompte : <strong>{formatEur(vehicle.depositAmount.toString())}</strong>
+              </span>
+            )}
+            {vehicle.depositPaymentMethod && (
+              <span>Paiement : {PAYMENT_METHOD_LABELS[vehicle.depositPaymentMethod] ?? vehicle.depositPaymentMethod}</span>
+            )}
+            {vehicle.depositDate && <span>Le {formatDateInput(vehicle.depositDate)}</span>}
+          </div>
+          {vehicle.reservationOrder && (
+            <Link href={`/documents/commandes/${vehicle.reservationOrder.id}`} className="underline text-amber-900">
+              Voir le bon de commande {vehicle.reservationOrder.number ?? "(brouillon)"}
+            </Link>
+          )}
+        </div>
+      )}
 
       {canViewPurchaseInfo && margin != null ? (
         <div className="rounded-md border border-slate-200 bg-white p-3 text-sm inline-flex gap-6">

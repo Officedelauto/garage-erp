@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Euro, ReceiptText, Car, TriangleAlert } from "lucide-react";
+import { Euro, ReceiptText, Car, Lock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { APPOINTMENT_TYPE_LABELS } from "@/components/atelier/appointment-form";
+import { vehicleStatus } from "@/lib/vehicle-status";
 import { clientDisplayName, formatDate, formatEur, formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
     monthInvoices,
     unpaidInvoices,
     vehiclesInProgress,
-    stockItems,
+    allVehicles,
     recentDocuments,
     todaysAppointments,
   ] = await Promise.all([
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
       distinct: ["id"],
       include: { client: true },
     }),
-    prisma.stockItem.findMany({ orderBy: { quantity: "asc" } }),
+    prisma.vehicle.findMany({ select: { clientId: true, salePrice: true, reservedByClientId: true } }),
     prisma.document.findMany({
       orderBy: { createdAt: "desc" },
       take: 6,
@@ -62,7 +63,8 @@ export default async function DashboardPage() {
   const revenueThisMonth = monthInvoices.reduce((sum, d) => sum + Number(d.totalHT), 0);
   const unpaidTotal = unpaidInvoices.reduce((sum, d) => sum + Number(d.totalTTC), 0);
   const overdueCount = unpaidInvoices.filter((d) => d.dueDate && d.dueDate < now).length;
-  const lowStockItems = stockItems.filter((item) => item.quantity <= item.alertThreshold);
+  const stockCount = allVehicles.filter((v) => vehicleStatus(v) === "STOCK").length;
+  const reservedCount = allVehicles.filter((v) => vehicleStatus(v) === "RESERVE").length;
 
   const stats = [
     {
@@ -86,10 +88,17 @@ export default async function DashboardPage() {
       accent: "bg-blue-50 text-blue-600",
     },
     {
-      label: "Alertes stock bas",
-      value: lowStockItems.length,
-      sub: "pièce(s) sous le seuil",
-      icon: TriangleAlert,
+      label: "Véhicules en stock",
+      value: stockCount,
+      sub: "disponibles à la vente",
+      icon: Car,
+      accent: "bg-slate-100 text-slate-600",
+    },
+    {
+      label: "Véhicules réservés",
+      value: reservedCount,
+      sub: "acompte reçu, livraison en cours",
+      icon: Lock,
       accent: "bg-amber-50 text-amber-600",
     },
   ];
@@ -98,7 +107,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-semibold text-ink-900">Tableau de bord</h1>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="pt-4">
@@ -145,45 +154,24 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Factures impayées</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {unpaidInvoices.length === 0 && <p className="text-sm text-slate-400">Aucune facture impayée.</p>}
-            {unpaidInvoices.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between text-sm">
-                <Link href={`/documents/factures/${inv.id}`} className="hover:underline">
-                  {inv.number} — {clientDisplayName(inv.client)}
-                </Link>
-                <span className={inv.dueDate && inv.dueDate < now ? "text-red-600 font-medium" : "text-slate-600"}>
-                  {formatEur(inv.totalTTC.toString())}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Alertes stock</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {lowStockItems.length === 0 && <p className="text-sm text-slate-400">Aucune alerte.</p>}
-            {lowStockItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-sm">
-                <Link href={`/stock/${item.id}`} className="hover:underline">
-                  {item.reference} — {item.name}
-                </Link>
-                <span className="text-red-600 font-medium">
-                  {item.quantity} / seuil {item.alertThreshold}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Factures impayées</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {unpaidInvoices.length === 0 && <p className="text-sm text-slate-400">Aucune facture impayée.</p>}
+          {unpaidInvoices.map((inv) => (
+            <div key={inv.id} className="flex items-center justify-between text-sm">
+              <Link href={`/documents/factures/${inv.id}`} className="hover:underline">
+                {inv.number} — {clientDisplayName(inv.client)}
+              </Link>
+              <span className={inv.dueDate && inv.dueDate < now ? "text-red-600 font-medium" : "text-slate-600"}>
+                {formatEur(inv.totalTTC.toString())}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

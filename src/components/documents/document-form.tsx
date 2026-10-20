@@ -46,6 +46,27 @@ function emptyLine(): Line {
 
 const NEW_CLIENT_VALUE = "__new__";
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  ESPECES: "Espèces",
+  CARTE: "Carte bancaire",
+  CHEQUE: "Chèque",
+  VIREMENT: "Virement",
+  AUTRE: "Autre",
+};
+
+function vehicleLine(veh: VehicleOption): Line {
+  return {
+    key: Math.random().toString(36).slice(2),
+    type: "VEHICLE",
+    description: veh.label,
+    stockItemId: "",
+    vehicleId: veh.id,
+    quantity: "1",
+    unitPriceHT: veh.salePriceHT ?? "0",
+    vatRate: "0",
+  };
+}
+
 export function DocumentForm({
   action,
   clients,
@@ -53,6 +74,7 @@ export function DocumentForm({
   stockItems,
   serviceItems,
   defaults,
+  prefillVehicleId,
   submitLabel = "Enregistrer",
 }: {
   action: (state: DocumentFormState, formData: FormData) => Promise<DocumentFormState>;
@@ -65,15 +87,22 @@ export function DocumentForm({
     vehicleId?: string;
     notes?: string;
     lines?: Line[];
+    depositAmount?: string;
+    depositPaymentMethod?: string;
   };
+  prefillVehicleId?: string;
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const [clientOptions, setClientOptions] = useState(clients);
   const [clientId, setClientId] = useState(defaults?.clientId ?? "");
   const [showClientCreate, setShowClientCreate] = useState(false);
-  const [vehicleId, setVehicleId] = useState(defaults?.vehicleId ?? "");
-  const [lines, setLines] = useState<Line[]>(defaults?.lines?.length ? defaults.lines : [emptyLine()]);
+  const [vehicleId, setVehicleId] = useState(defaults?.vehicleId ?? prefillVehicleId ?? "");
+  const [lines, setLines] = useState<Line[]>(() => {
+    if (defaults?.lines?.length) return defaults.lines;
+    const prefillVeh = prefillVehicleId ? vehicles.find((v) => v.id === prefillVehicleId) : null;
+    return prefillVeh ? [vehicleLine(prefillVeh)] : [emptyLine()];
+  });
 
   const availableVehicles = useMemo(
     () => vehicles.filter((v) => !clientId || v.clientId === clientId),
@@ -357,6 +386,37 @@ export function DocumentForm({
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 max-w-2xl rounded-md bg-slate-50 p-3">
+        <div>
+          <Label htmlFor="depositAmount">Acompte reçu (€, optionnel)</Label>
+          <Input
+            id="depositAmount"
+            name="depositAmount"
+            type="number"
+            step="0.01"
+            defaultValue={defaults?.depositAmount}
+            placeholder="Ex : 500"
+          />
+        </div>
+        <div>
+          <Label htmlFor="depositPaymentMethod">Mode de paiement de l&apos;acompte</Label>
+          <Select id="depositPaymentMethod" name="depositPaymentMethod" defaultValue={defaults?.depositPaymentMethod ?? ""}>
+            <option value="">—</option>
+            {Object.entries(PAYMENT_METHOD_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {lines.some((l) => l.type === "VEHICLE") && (
+          <p className="col-span-2 text-xs text-slate-500">
+            Sur un bon de commande, un acompte renseigné ici réserve automatiquement le(s) véhicule(s) de la liste
+            une fois le document finalisé.
+          </p>
+        )}
       </div>
 
       <div className="max-w-2xl">

@@ -18,11 +18,15 @@ const LineSchema = z.object({
   vatRate: z.coerce.number().min(0, "TVA invalide"),
 });
 
+const PAYMENT_METHODS = ["ESPECES", "CARTE", "CHEQUE", "VIREMENT", "AUTRE"] as const;
+
 const DocumentFormSchema = z.object({
   clientId: z.string().min(1, "Client requis"),
   vehicleId: z.string().optional().nullable(),
   notes: z.string().trim().optional(),
   linesJson: z.string(),
+  depositAmount: z.coerce.number().min(0).optional(),
+  depositPaymentMethod: z.enum(PAYMENT_METHODS).optional(),
 });
 
 export type DocumentFormState = { error?: string } | undefined;
@@ -45,6 +49,8 @@ function parseDocumentForm(formData: FormData) {
     vehicleId: formData.get("vehicleId") || null,
     notes: formData.get("notes") || undefined,
     linesJson: formData.get("linesJson"),
+    depositAmount: formData.get("depositAmount") || undefined,
+    depositPaymentMethod: formData.get("depositPaymentMethod") || undefined,
   });
   if (!parsed.success) return { error: "Champs invalides." } as const;
 
@@ -81,6 +87,8 @@ export async function createDraftDocument(
       clientId: parsed.data.clientId,
       vehicleId: parsed.data.vehicleId || null,
       notes: parsed.data.notes || null,
+      depositAmount: parsed.data.depositAmount ?? null,
+      depositPaymentMethod: parsed.data.depositPaymentMethod ?? null,
       ...totals,
       lines: {
         create: parsed.lines.map((line, position) => ({
@@ -125,6 +133,8 @@ export async function updateDraftDocument(
         clientId: parsed.data.clientId,
         vehicleId: parsed.data.vehicleId || null,
         notes: parsed.data.notes || null,
+        depositAmount: parsed.data.depositAmount ?? null,
+        depositPaymentMethod: parsed.data.depositPaymentMethod ?? null,
         ...totals,
         lines: {
           create: parsed.lines.map((line, position) => ({
@@ -214,6 +224,23 @@ export async function finalizeDocument(id: string) {
         }
       }
     }
+
+    // Un bon de commande avec acompte réserve le(s) véhicule(s) qu'il contient.
+    if (document.kind === "ORDER" && document.depositAmount != null && Number(document.depositAmount) > 0) {
+      const vehicleIds = document.lines.map((l) => l.vehicleId).filter((v): v is string => v != null);
+      for (const vehicleId of vehicleIds) {
+        await tx.vehicle.update({
+          where: { id: vehicleId },
+          data: {
+            reservedByClientId: document.clientId,
+            depositAmount: document.depositAmount,
+            depositPaymentMethod: document.depositPaymentMethod,
+            depositDate: now,
+            reservationOrderId: document.id,
+          },
+        });
+      }
+    }
   });
 
   const document = await prisma.document.findUniqueOrThrow({ where: { id } });
@@ -264,6 +291,20 @@ export async function cancelDocument(id: string) {
       }
     }
 
+    // Annuler un bon de commande libère les véhicules qu'il avait réservés.
+    if (document.kind === "ORDER") {
+      await tx.vehicle.updateMany({
+        where: { reservationOrderId: document.id },
+        data: {
+          reservedByClientId: null,
+          depositAmount: null,
+          depositPaymentMethod: null,
+          depositDate: null,
+          reservationOrderId: null,
+        },
+      });
+    }
+
     await tx.document.update({ where: { id }, data: { status: "CANCELLED" } });
   });
 
@@ -300,7 +341,7 @@ export async function convertDocumentToInvoice(sourceId: string) {
     if (source.status !== "FINALIZED") throw new Error("Seul un document finalisé peut être converti.");
     if (source.convertedInvoice) throw new Error("Ce document a déjà été converti en facture.");
 
-    return tx.document.create({
+    const createdInvoice = await tx.document.create({
       data: {
         kind: "INVOICE",
         clientId: source.clientId,
@@ -324,6 +365,25 @@ export async function convertDocumentToInvoice(sourceId: string) {
         },
       },
     });
+
+    // La facturation finalise la vente : on lève la réservation et on attribue le
+    // véhicule au client (statut "Vendu").
+    const vehicleIds = source.lines.map((l) => l.vehicleId).filter((v): v is string => v != null);
+    for (const vehicleId of vehicleIds) {
+      await tx.vehicle.update({
+        where: { id: vehicleId },
+        data: {
+          clientId: source.clientId,
+          reservedByClientId: null,
+          depositAmount: null,
+          depositPaymentMethod: null,
+          depositDate: null,
+          reservationOrderId: null,
+        },
+      });
+    }
+
+    return createdInvoice;
   });
 
   revalidatePath("/documents/factures");

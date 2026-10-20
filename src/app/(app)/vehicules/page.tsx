@@ -9,7 +9,7 @@ import { vehicleStatus, VEHICLE_STATUS_BADGES } from "@/lib/vehicle-status";
 const SORTABLE_FIELDS = ["brand", "stockNumber"] as const;
 type SortField = (typeof SORTABLE_FIELDS)[number];
 
-const STATUS_FILTERS = ["stock", "vendu", "client"] as const;
+const STATUS_FILTERS = ["stock", "reserve", "vendu", "client"] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 function isSortField(value: string | undefined): value is SortField {
@@ -42,13 +42,14 @@ export default async function VehiclesPage({
 
   const allVehicles = await prisma.vehicle.findMany({
     orderBy: activeSort ? { [activeSort]: activeDir } : { createdAt: "desc" },
-    include: { client: true },
+    include: { client: true, reservedByClient: true },
   });
 
-  const counts = { stock: 0, vendu: 0, client: 0 };
+  const counts = { stock: 0, reserve: 0, vendu: 0, client: 0 };
   for (const v of allVehicles) {
     const s = vehicleStatus(v);
     if (s === "STOCK") counts.stock++;
+    else if (s === "RESERVE") counts.reserve++;
     else if (s === "VENDU") counts.vendu++;
     else counts.client++;
   }
@@ -95,6 +96,7 @@ export default async function VehiclesPage({
       <div className="flex items-center gap-2 mb-4">
         {statusTab(null, "Tous", allVehicles.length)}
         {statusTab("stock", "En stock", counts.stock)}
+        {statusTab("reserve", "Réservés", counts.reserve)}
         {statusTab("vendu", "Vendus", counts.vendu)}
         {statusTab("client", "Client (atelier)", counts.client)}
       </div>
@@ -127,7 +129,11 @@ export default async function VehiclesPage({
                     <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                   </td>
                   <td className="px-4 py-2 text-slate-600">
-                    {v.clientId ? (
+                    {v.reservedByClientId ? (
+                      <Link href={`/clients/${v.reservedByClientId}`} className="hover:underline">
+                        {clientDisplayName(v.reservedByClient)}
+                      </Link>
+                    ) : v.clientId ? (
                       <Link href={`/clients/${v.clientId}`} className="hover:underline">
                         {clientDisplayName(v.client)}
                       </Link>

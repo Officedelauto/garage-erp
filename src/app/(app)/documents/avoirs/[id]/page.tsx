@@ -92,6 +92,8 @@ async function DocumentFormEditor({ documentId }: { documentId: string }) {
         clientId: document.clientId,
         vehicleId: document.vehicleId ?? undefined,
         notes: document.notes ?? undefined,
+        depositAmount: document.depositAmount?.toString() ?? undefined,
+        depositPaymentMethod: document.depositPaymentMethod ?? undefined,
         lines: document.lines.map((l) => ({
           key: l.id,
           type: l.type,
