@@ -29,6 +29,8 @@ model Company {
   invoicePrefix     String   @default("FA")
   nextQuoteNumber   Int      @default(1)
   nextInvoiceNumber Int      @default(1)
+  // Jeton secret utilisé dans l'URL du flux iCal (abonnement Google Agenda en lecture seule).
+  calendarFeedToken String?  @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -45,6 +47,8 @@ model User {
   name         String
   role         UserRole @default(STAFF)
   createdAt    DateTime @default(now())
+
+  appointments Appointment[]
 }
 
 enum ClientType {
@@ -68,8 +72,9 @@ model Client {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  vehicles  Vehicle[]
-  documents Document[]
+  vehicles     Vehicle[]
+  documents    Document[]
+  appointments Appointment[]
 }
 
 enum FuelType {
@@ -109,9 +114,10 @@ model Vehicle {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  documents Document[]
-  notesLog  VehicleNote[]
-  photos    VehiclePhoto[]
+  documents    Document[]
+  notesLog     VehicleNote[]
+  photos       VehiclePhoto[]
+  appointments Appointment[]
 }
 
 model VehicleNote {
@@ -218,4 +224,36 @@ model DocumentLine {
   unitPriceHT Decimal    @db.Decimal(10, 2)
   vatRate     Decimal    @default(20) @db.Decimal(5, 2)
   position    Int        @default(0)
+}
+
+enum AppointmentType {
+  REVISION
+  REPARATION
+  CONTROLE_TECHNIQUE
+  LIVRAISON
+  ESSAI
+  AUTRE
+}
+
+model Appointment {
+  id         String          @id @default(cuid())
+  title      String
+  type       AppointmentType @default(AUTRE)
+  startAt    DateTime
+  endAt      DateTime?
+
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startAt])
 }

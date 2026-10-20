@@ -1,11 +1,20 @@
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { CompanyForm } from "./company-form";
 import { CompanyLogoForm } from "@/components/settings/company-logo-form";
+import { CalendarFeedSettings } from "@/components/settings/calendar-feed-settings";
 
 export default async function SettingsPage() {
   await verifySession();
   const company = await prisma.company.findFirst();
+
+  const headerList = await headers();
+  const host = headerList.get("host");
+  const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
+  const feedUrl = company?.calendarFeedToken && host
+    ? `${protocol}://${host}/api/calendar/${company.calendarFeedToken}`
+    : null;
 
   return (
     <div>
@@ -34,6 +43,11 @@ export default async function SettingsPage() {
           invoicePrefix: company?.invoicePrefix ?? "FA",
         }}
       />
+
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Flux Google Agenda (planning atelier)</h2>
+        <CalendarFeedSettings feedUrl={feedUrl} />
+      </div>
     </div>
   );
 }

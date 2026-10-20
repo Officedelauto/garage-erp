@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/documents/status-badge";
-import { clientDisplayName, formatDate, formatEur } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { APPOINTMENT_TYPE_LABELS } from "@/components/atelier/appointment-form";
+import { clientDisplayName, formatDate, formatEur, formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
@@ -12,6 +14,8 @@ export default async function DashboardPage() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() + 1);
 
   const [
     monthInvoices,
@@ -19,6 +23,7 @@ export default async function DashboardPage() {
     vehiclesInProgress,
     stockItems,
     recentDocuments,
+    todaysAppointments,
   ] = await Promise.all([
     prisma.document.findMany({
       where: {
@@ -46,6 +51,11 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       take: 6,
       include: { client: true },
+    }),
+    prisma.appointment.findMany({
+      where: { startAt: { gte: startOfToday, lt: startOfTomorrow } },
+      include: { client: true, vehicle: true, assignedTo: true },
+      orderBy: { startAt: "asc" },
     }),
   ]);
 
@@ -104,6 +114,36 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Rendez-vous d&apos;aujourd&apos;hui</CardTitle>
+            <Link href="/atelier" className="text-xs text-brand-600 hover:underline">
+              Voir le planning →
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {todaysAppointments.length === 0 && <p className="text-sm text-slate-400">Aucun rendez-vous aujourd&apos;hui.</p>}
+          {todaysAppointments.map((a) => (
+            <div key={a.id} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-900 w-12">{formatTime(a.startAt)}</span>
+                <span className="text-slate-700">{a.title}</span>
+                <Badge variant="default" className="text-[10px]">
+                  {APPOINTMENT_TYPE_LABELS[a.type]}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 text-slate-500">
+                {a.vehicle && <span>{a.vehicle.plate}</span>}
+                {a.client && <span>{clientDisplayName(a.client)}</span>}
+                {a.assignedTo && <span>👤 {a.assignedTo.name}</span>}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-2 gap-4">
         <Card>

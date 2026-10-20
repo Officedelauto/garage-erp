@@ -30,6 +30,21 @@ export function formatDateInput(date: Date | string | null | undefined) {
   return new Date(date).toISOString().slice(0, 10);
 }
 
+const timeFormatter = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+export function formatTime(date: Date | string | null | undefined) {
+  if (!date) return "";
+  return timeFormatter.format(new Date(date));
+}
+
+// Format pour un input type="datetime-local" (heure locale du navigateur, pas UTC).
+export function formatDateTimeInput(date: Date | string | null | undefined) {
+  if (!date) return "";
+  const d = new Date(date);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function monthsSince(date: Date | string | null | undefined) {
   if (!date) return null;
   const diffMs = Date.now() - new Date(date).getTime();
