@@ -11,7 +11,7 @@ import {
   finalizeDocument,
   deleteDraftDocument,
   cancelDocument,
-  convertQuoteToInvoice,
+  convertDocumentToInvoice,
 } from "@/lib/actions/documents";
 import { getDocumentFormOptions } from "@/lib/documents-options";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   const boundFinalize = finalizeDocument.bind(null, document.id);
   const boundDelete = deleteDraftDocument.bind(null, document.id);
   const boundCancel = cancelDocument.bind(null, document.id);
-  const boundConvert = convertQuoteToInvoice.bind(null, document.id);
+  const boundConvert = convertDocumentToInvoice.bind(null, document.id);
 
   return (
     <div className="space-y-6">
@@ -118,6 +118,7 @@ async function DocumentFormEditor({ documentId }: { documentId: string }) {
           type: l.type,
           description: l.description,
           stockItemId: l.stockItemId ?? "",
+          vehicleId: l.vehicleId ?? "",
           quantity: l.quantity.toString(),
           unitPriceHT: l.unitPriceHT.toString(),
           vatRate: l.vatRate.toString(),

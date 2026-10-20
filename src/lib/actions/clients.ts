@@ -38,8 +38,7 @@ function parseClientForm(formData: FormData) {
   });
 }
 
-export async function createClient(_prevState: ClientFormState, formData: FormData): Promise<ClientFormState> {
-  await verifySession();
+function validateClientData(formData: FormData): { error: string } | { data: z.infer<typeof ClientSchema> } {
   const parsed = parseClientForm(formData);
   if (!parsed.success) {
     return { error: "Champs invalides, vérifiez le formulaire." };
@@ -51,16 +50,51 @@ export async function createClient(_prevState: ClientFormState, formData: FormDa
   if (data.type === "PROFESSIONNEL" && !data.companyName) {
     return { error: "Merci de renseigner la raison sociale pour un client professionnel." };
   }
+  return { data };
+}
+
+export async function createClient(_prevState: ClientFormState, formData: FormData): Promise<ClientFormState> {
+  await verifySession();
+  const validated = validateClientData(formData);
+  if ("error" in validated) return { error: validated.error };
 
   const client = await prisma.client.create({
     data: {
-      ...data,
-      email: data.email || null,
+      ...validated.data,
+      email: validated.data.email || null,
     },
   });
 
   revalidatePath("/clients");
   redirect(`/clients/${client.id}`);
+}
+
+// Variante utilisée pour la création rapide depuis le sélecteur de client d'un
+// devis/bon de commande/facture/avoir : ne redirige pas, renvoie le client créé
+// pour qu'il soit sélectionné immédiatement sans quitter le formulaire en cours.
+export type ClientQuickCreateState = { error?: string; client?: { id: string; label: string } } | undefined;
+
+export async function createClientQuick(
+  _prevState: ClientQuickCreateState,
+  formData: FormData
+): Promise<ClientQuickCreateState> {
+  await verifySession();
+  const validated = validateClientData(formData);
+  if ("error" in validated) return { error: validated.error };
+
+  const client = await prisma.client.create({
+    data: {
+      ...validated.data,
+      email: validated.data.email || null,
+    },
+  });
+
+  revalidatePath("/clients");
+  const label =
+    client.type === "PROFESSIONNEL"
+      ? client.companyName || "—"
+      : `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim() || "—";
+  return { client: { id: client.id, label } };
 }
 
 export async function updateClient(id: string, _prevState: ClientFormState, formData: FormData): Promise<ClientFormState> {

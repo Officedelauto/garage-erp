@@ -4,25 +4,30 @@ import { useActionState, useMemo, useState } from "react";
 import type { DocumentFormState } from "@/lib/actions/documents";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { ClientQuickCreate } from "@/components/clients/client-quick-create";
 import { formatEur } from "@/lib/utils";
 
-type LineType = "PART" | "LABOR" | "OTHER";
+type LineType = "PART" | "LABOR" | "VEHICLE" | "OTHER";
 
 type Line = {
   key: string;
   type: LineType;
   description: string;
   stockItemId: string;
+  vehicleId: string;
   quantity: string;
   unitPriceHT: string;
   vatRate: string;
 };
 
 type StockOption = { id: string; label: string; salePriceHT: string; vatRate: string };
+type ServiceOption = { id: string; label: string; priceHT: string; vatRate: string };
+type VehicleOption = { id: string; clientId: string | null; label: string; salePriceHT: string | null; sold: boolean };
 
 const LINE_TYPE_LABELS: Record<LineType, string> = {
   PART: "Pièce",
   LABOR: "Main d'œuvre",
+  VEHICLE: "Véhicule",
   OTHER: "Autre",
 };
 
@@ -32,24 +37,29 @@ function emptyLine(): Line {
     type: "LABOR",
     description: "",
     stockItemId: "",
+    vehicleId: "",
     quantity: "1",
     unitPriceHT: "0",
     vatRate: "20",
   };
 }
 
+const NEW_CLIENT_VALUE = "__new__";
+
 export function DocumentForm({
   action,
   clients,
   vehicles,
   stockItems,
+  serviceItems,
   defaults,
   submitLabel = "Enregistrer",
 }: {
   action: (state: DocumentFormState, formData: FormData) => Promise<DocumentFormState>;
   clients: { id: string; label: string }[];
-  vehicles: { id: string; clientId: string | null; label: string }[];
+  vehicles: VehicleOption[];
   stockItems: StockOption[];
+  serviceItems: ServiceOption[];
   defaults?: {
     clientId?: string;
     vehicleId?: string;
@@ -59,7 +69,9 @@ export function DocumentForm({
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [clientOptions, setClientOptions] = useState(clients);
   const [clientId, setClientId] = useState(defaults?.clientId ?? "");
+  const [showClientCreate, setShowClientCreate] = useState(false);
   const [vehicleId, setVehicleId] = useState(defaults?.vehicleId ?? "");
   const [lines, setLines] = useState<Line[]>(defaults?.lines?.length ? defaults.lines : [emptyLine()]);
 
@@ -67,6 +79,9 @@ export function DocumentForm({
     () => vehicles.filter((v) => !clientId || v.clientId === clientId),
     [vehicles, clientId]
   );
+
+  // Véhicules proposables comme ligne de vente : en stock (non vendus) avec un prix de vente défini.
+  const saleableVehicles = useMemo(() => vehicles.filter((v) => !v.sold && v.salePriceHT != null), [vehicles]);
 
   function updateLine(key: string, patch: Partial<Line>) {
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -80,10 +95,40 @@ export function DocumentForm({
     }
     updateLine(key, {
       stockItemId,
+      vehicleId: "",
       type: "PART",
       description: stock.label,
       unitPriceHT: stock.salePriceHT,
       vatRate: stock.vatRate,
+    });
+  }
+
+  function applyServiceItem(key: string, serviceItemId: string) {
+    const service = serviceItems.find((s) => s.id === serviceItemId);
+    if (!service) return;
+    updateLine(key, {
+      stockItemId: "",
+      vehicleId: "",
+      type: "LABOR",
+      description: service.label,
+      unitPriceHT: service.priceHT,
+      vatRate: service.vatRate,
+    });
+  }
+
+  function applyVehicleItem(key: string, vehId: string) {
+    const veh = saleableVehicles.find((v) => v.id === vehId);
+    if (!veh) {
+      updateLine(key, { vehicleId: "" });
+      return;
+    }
+    updateLine(key, {
+      vehicleId: vehId,
+      stockItemId: "",
+      type: "VEHICLE",
+      description: veh.label,
+      unitPriceHT: veh.salePriceHT ?? "0",
+      vatRate: "0",
     });
   }
 
@@ -106,6 +151,7 @@ export function DocumentForm({
       type: l.type,
       description: l.description,
       stockItemId: l.stockItemId || null,
+      vehicleId: l.vehicleId || null,
       quantity: l.quantity,
       unitPriceHT: l.unitPriceHT,
       vatRate: l.vatRate,
@@ -122,8 +168,12 @@ export function DocumentForm({
           <Select
             id="clientId"
             name="clientId"
-            value={clientId}
+            value={showClientCreate ? NEW_CLIENT_VALUE : clientId}
             onChange={(e) => {
+              if (e.target.value === NEW_CLIENT_VALUE) {
+                setShowClientCreate(true);
+                return;
+              }
               setClientId(e.target.value);
               setVehicleId("");
             }}
@@ -132,15 +182,28 @@ export function DocumentForm({
             <option value="" disabled>
               Sélectionner un client
             </option>
-            {clients.map((c) => (
+            {clientOptions.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>
             ))}
+            <option value={NEW_CLIENT_VALUE}>+ Nouveau client…</option>
           </Select>
+          {showClientCreate && (
+            <div className="mt-2">
+              <ClientQuickCreate
+                onCreated={(client) => {
+                  setClientOptions((prev) => [...prev, client]);
+                  setClientId(client.id);
+                  setShowClientCreate(false);
+                }}
+                onCancel={() => setShowClientCreate(false)}
+              />
+            </div>
+          )}
         </div>
         <div>
-          <Label htmlFor="vehicleId">Véhicule (optionnel)</Label>
+          <Label htmlFor="vehicleId">Véhicule concerné (optionnel)</Label>
           <Select id="vehicleId" name="vehicleId" value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
             <option value="">Aucun</option>
             {availableVehicles.map((v) => (
@@ -165,7 +228,9 @@ export function DocumentForm({
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>
                 <th className="px-2 py-2 font-medium w-28">Type</th>
-                <th className="px-2 py-2 font-medium w-48">Depuis le stock</th>
+                <th className="px-2 py-2 font-medium w-40">Pièce (stock)</th>
+                <th className="px-2 py-2 font-medium w-40">Article/prestation</th>
+                <th className="px-2 py-2 font-medium w-40">Véhicule à vendre</th>
                 <th className="px-2 py-2 font-medium">Description</th>
                 <th className="px-2 py-2 font-medium w-20">Qté</th>
                 <th className="px-2 py-2 font-medium w-28">Prix HT</th>
@@ -197,6 +262,26 @@ export function DocumentForm({
                         {stockItems.map((s) => (
                           <option key={s.id} value={s.id}>
                             {s.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <Select value="" onChange={(e) => applyServiceItem(line.key, e.target.value)}>
+                        <option value="">—</option>
+                        {serviceItems.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <Select value={line.vehicleId} onChange={(e) => applyVehicleItem(line.key, e.target.value)}>
+                        <option value="">—</option>
+                        {saleableVehicles.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.label}
                           </option>
                         ))}
                       </Select>
@@ -251,6 +336,10 @@ export function DocumentForm({
             </tbody>
           </table>
         </div>
+        <p className="mt-1 text-xs text-slate-400">
+          Vente de véhicule : la TVA des véhicules d&apos;occasion suit souvent le régime de la marge — vérifiez le
+          taux avant de finaliser.
+        </p>
 
         <div className="mt-3 flex justify-end">
           <div className="w-64 space-y-1 text-sm">

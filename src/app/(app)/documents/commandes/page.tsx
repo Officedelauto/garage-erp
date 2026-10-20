@@ -1,0 +1,64 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { verifySession } from "@/lib/dal";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/documents/status-badge";
+import { clientDisplayName, formatDate, formatEur } from "@/lib/utils";
+
+export default async function OrdersPage() {
+  await verifySession();
+  const orders = await prisma.document.findMany({
+    where: { kind: "ORDER" },
+    orderBy: { createdAt: "desc" },
+    include: { client: true },
+  });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-heading text-xl font-semibold text-ink-900">Bons de commande</h1>
+        <Link href="/documents/commandes/new">
+          <Button>Nouveau bon de commande</Button>
+        </Link>
+      </div>
+
+      <div className="rounded-xl border border-ink-900/10 bg-white overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-left text-slate-500">
+            <tr>
+              <th className="px-4 py-2 font-medium">Numéro</th>
+              <th className="px-4 py-2 font-medium">Client</th>
+              <th className="px-4 py-2 font-medium">Date</th>
+              <th className="px-4 py-2 font-medium">Total TTC</th>
+              <th className="px-4 py-2 font-medium">Statut</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {orders.map((doc) => (
+              <tr key={doc.id} className="hover:bg-brand-50/40">
+                <td className="px-4 py-2">
+                  <Link href={`/documents/commandes/${doc.id}`} className="font-medium text-slate-900 hover:underline">
+                    {doc.number ?? "Brouillon"}
+                  </Link>
+                </td>
+                <td className="px-4 py-2 text-slate-600">{clientDisplayName(doc.client)}</td>
+                <td className="px-4 py-2 text-slate-600">{formatDate(doc.issueDate ?? doc.createdAt)}</td>
+                <td className="px-4 py-2 text-slate-600">{formatEur(doc.totalTTC.toString())}</td>
+                <td className="px-4 py-2">
+                  <StatusBadge status={doc.status} />
+                </td>
+              </tr>
+            ))}
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                  Aucun bon de commande pour l&apos;instant.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

@@ -16,7 +16,9 @@ type Defaults = {
   email: string;
   iban: string;
   quotePrefix: string;
+  orderPrefix: string;
   invoicePrefix: string;
+  creditNotePrefix: string;
 };
 
 export function CompanyForm({ defaults }: { defaults: Defaults }) {
@@ -78,8 +80,16 @@ export function CompanyForm({ defaults }: { defaults: Defaults }) {
           <Input id="quotePrefix" name="quotePrefix" defaultValue={defaults.quotePrefix} required />
         </div>
         <div>
+          <Label htmlFor="orderPrefix">Préfixe numérotation bons de commande</Label>
+          <Input id="orderPrefix" name="orderPrefix" defaultValue={defaults.orderPrefix} required />
+        </div>
+        <div>
           <Label htmlFor="invoicePrefix">Préfixe numérotation factures</Label>
           <Input id="invoicePrefix" name="invoicePrefix" defaultValue={defaults.invoicePrefix} required />
+        </div>
+        <div>
+          <Label htmlFor="creditNotePrefix">Préfixe numérotation avoirs</Label>
+          <Input id="creditNotePrefix" name="creditNotePrefix" defaultValue={defaults.creditNotePrefix} required />
         </div>
       </div>
 

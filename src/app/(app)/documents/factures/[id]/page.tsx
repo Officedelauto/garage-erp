@@ -79,8 +79,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
       {document.convertedFromQuote && (
         <p className="text-sm text-slate-500">
-          Issue du devis{" "}
-          <Link href={`/documents/devis/${document.convertedFromQuote.id}`} className="underline">
+          Issue {document.convertedFromQuote.kind === "ORDER" ? "du bon de commande" : "du devis"}{" "}
+          <Link
+            href={`${document.convertedFromQuote.kind === "ORDER" ? "/documents/commandes" : "/documents/devis"}/${document.convertedFromQuote.id}`}
+            className="underline"
+          >
             {document.convertedFromQuote.number}
           </Link>
         </p>
@@ -118,6 +121,7 @@ async function InvoiceFormEditor({ documentId }: { documentId: string }) {
           type: l.type,
           description: l.description,
           stockItemId: l.stockItemId ?? "",
+          vehicleId: l.vehicleId ?? "",
           quantity: l.quantity.toString(),
           unitPriceHT: l.unitPriceHT.toString(),
           vatRate: l.vatRate.toString(),

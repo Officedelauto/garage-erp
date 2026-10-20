@@ -6,11 +6,13 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import type { DocumentKind } from "@/generated/prisma/enums";
+import { DOCUMENT_BASE_PATH, DOCUMENT_NUMBERING } from "@/lib/document-kinds";
 
 const LineSchema = z.object({
-  type: z.enum(["PART", "LABOR", "OTHER"]),
+  type: z.enum(["PART", "LABOR", "VEHICLE", "OTHER"]),
   description: z.string().trim().min(1, "Description requise"),
   stockItemId: z.string().optional().nullable(),
+  vehicleId: z.string().optional().nullable(),
   quantity: z.coerce.number().positive("Quantité invalide"),
   unitPriceHT: z.coerce.number().min(0, "Prix invalide"),
   vatRate: z.coerce.number().min(0, "TVA invalide"),
@@ -71,6 +73,7 @@ export async function createDraftDocument(
   if ("error" in parsed) return { error: parsed.error };
 
   const totals = computeTotals(parsed.lines);
+  const basePath = DOCUMENT_BASE_PATH[kind];
 
   const document = await prisma.document.create({
     data: {
@@ -84,6 +87,7 @@ export async function createDraftDocument(
           type: line.type,
           description: line.description,
           stockItemId: line.stockItemId || null,
+          vehicleId: line.vehicleId || null,
           quantity: line.quantity,
           unitPriceHT: line.unitPriceHT,
           vatRate: line.vatRate,
@@ -93,8 +97,8 @@ export async function createDraftDocument(
     },
   });
 
-  revalidatePath(kind === "QUOTE" ? "/documents/devis" : "/documents/factures");
-  redirect(`/documents/${kind === "QUOTE" ? "devis" : "factures"}/${document.id}`);
+  revalidatePath(basePath);
+  redirect(`${basePath}/${document.id}`);
 }
 
 export async function updateDraftDocument(
@@ -111,7 +115,7 @@ export async function updateDraftDocument(
   if ("error" in parsed) return { error: parsed.error };
 
   const totals = computeTotals(parsed.lines);
-  const basePath = existing.kind === "QUOTE" ? "/documents/devis" : "/documents/factures";
+  const basePath = DOCUMENT_BASE_PATH[existing.kind];
 
   await prisma.$transaction([
     prisma.documentLine.deleteMany({ where: { documentId: id } }),
@@ -127,6 +131,7 @@ export async function updateDraftDocument(
             type: line.type,
             description: line.description,
             stockItemId: line.stockItemId || null,
+            vehicleId: line.vehicleId || null,
             quantity: line.quantity,
             unitPriceHT: line.unitPriceHT,
             vatRate: line.vatRate,
@@ -158,13 +163,13 @@ export async function finalizeDocument(id: string) {
     const company = await tx.company.findFirst();
     if (!company) throw new Error("Réglages entreprise manquants.");
 
-    const isQuote = document.kind === "QUOTE";
-    const counter = isQuote ? company.nextQuoteNumber : company.nextInvoiceNumber;
-    const number = formatNumber(isQuote ? company.quotePrefix : company.invoicePrefix, counter);
+    const { prefixField, counterField } = DOCUMENT_NUMBERING[document.kind];
+    const counter = company[counterField];
+    const number = formatNumber(company[prefixField], counter);
 
     await tx.company.update({
       where: { id: company.id },
-      data: isQuote ? { nextQuoteNumber: counter + 1 } : { nextInvoiceNumber: counter + 1 },
+      data: { [counterField]: counter + 1 },
     });
 
     const now = new Date();
@@ -174,7 +179,7 @@ export async function finalizeDocument(id: string) {
         number,
         status: "FINALIZED",
         issueDate: now,
-        dueDate: isQuote ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+        dueDate: document.kind === "INVOICE" ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) : null,
         companySnapshot: {
           name: company.name,
           address: company.address,
@@ -189,7 +194,8 @@ export async function finalizeDocument(id: string) {
       },
     });
 
-    if (!isQuote) {
+    // Une facture sort les pièces du stock ; un avoir les y remet.
+    if (document.kind === "INVOICE") {
       for (const line of document.lines) {
         if (line.stockItemId) {
           await tx.stockItem.update({
@@ -198,11 +204,20 @@ export async function finalizeDocument(id: string) {
           });
         }
       }
+    } else if (document.kind === "CREDIT_NOTE") {
+      for (const line of document.lines) {
+        if (line.stockItemId) {
+          await tx.stockItem.update({
+            where: { id: line.stockItemId },
+            data: { quantity: { increment: Math.trunc(Number(line.quantity)) } },
+          });
+        }
+      }
     }
   });
 
   const document = await prisma.document.findUniqueOrThrow({ where: { id } });
-  const basePath = document.kind === "QUOTE" ? "/documents/devis" : "/documents/factures";
+  const basePath = DOCUMENT_BASE_PATH[document.kind];
   revalidatePath(basePath);
   revalidatePath(`${basePath}/${id}`);
   redirect(`${basePath}/${id}`);
@@ -227,13 +242,24 @@ export async function cancelDocument(id: string) {
     if (!document) throw new Error("Document introuvable.");
     if (document.status === "CANCELLED") return;
 
-    if (document.kind === "INVOICE" && document.status !== "DRAFT") {
-      for (const line of document.lines) {
-        if (line.stockItemId) {
-          await tx.stockItem.update({
-            where: { id: line.stockItemId },
-            data: { quantity: { increment: Math.trunc(Number(line.quantity)) } },
-          });
+    if (document.status !== "DRAFT") {
+      if (document.kind === "INVOICE") {
+        for (const line of document.lines) {
+          if (line.stockItemId) {
+            await tx.stockItem.update({
+              where: { id: line.stockItemId },
+              data: { quantity: { increment: Math.trunc(Number(line.quantity)) } },
+            });
+          }
+        }
+      } else if (document.kind === "CREDIT_NOTE") {
+        for (const line of document.lines) {
+          if (line.stockItemId) {
+            await tx.stockItem.update({
+              where: { id: line.stockItemId },
+              data: { quantity: { decrement: Math.trunc(Number(line.quantity)) } },
+            });
+          }
         }
       }
     }
@@ -242,7 +268,7 @@ export async function cancelDocument(id: string) {
   });
 
   const document = await prisma.document.findUniqueOrThrow({ where: { id } });
-  const basePath = document.kind === "QUOTE" ? "/documents/devis" : "/documents/factures";
+  const basePath = DOCUMENT_BASE_PATH[document.kind];
   revalidatePath(basePath);
   revalidatePath(`${basePath}/${id}`);
   redirect(`${basePath}/${id}`);
@@ -254,40 +280,42 @@ export async function deleteDraftDocument(id: string) {
   if (!document) return;
   if (document.status !== "DRAFT") throw new Error("Seuls les brouillons peuvent être supprimés.");
 
-  const basePath = document.kind === "QUOTE" ? "/documents/devis" : "/documents/factures";
+  const basePath = DOCUMENT_BASE_PATH[document.kind];
   await prisma.document.delete({ where: { id } });
   revalidatePath(basePath);
   redirect(basePath);
 }
 
-export async function convertQuoteToInvoice(quoteId: string) {
+// Convertit un devis finalisé OU un bon de commande finalisé en facture.
+export async function convertDocumentToInvoice(sourceId: string) {
   await verifySession();
 
   const invoice = await prisma.$transaction(async (tx) => {
-    const quote = await tx.document.findUnique({
-      where: { id: quoteId },
+    const source = await tx.document.findUnique({
+      where: { id: sourceId },
       include: { lines: true, convertedInvoice: true },
     });
-    if (!quote) throw new Error("Devis introuvable.");
-    if (quote.kind !== "QUOTE") throw new Error("Ce document n'est pas un devis.");
-    if (quote.status !== "FINALIZED") throw new Error("Seul un devis finalisé peut être converti.");
-    if (quote.convertedInvoice) throw new Error("Ce devis a déjà été converti en facture.");
+    if (!source) throw new Error("Document introuvable.");
+    if (source.kind !== "QUOTE" && source.kind !== "ORDER") throw new Error("Ce document ne peut pas être converti en facture.");
+    if (source.status !== "FINALIZED") throw new Error("Seul un document finalisé peut être converti.");
+    if (source.convertedInvoice) throw new Error("Ce document a déjà été converti en facture.");
 
     return tx.document.create({
       data: {
         kind: "INVOICE",
-        clientId: quote.clientId,
-        vehicleId: quote.vehicleId,
-        notes: quote.notes,
-        totalHT: quote.totalHT,
-        totalTVA: quote.totalTVA,
-        totalTTC: quote.totalTTC,
-        convertedFromQuoteId: quote.id,
+        clientId: source.clientId,
+        vehicleId: source.vehicleId,
+        notes: source.notes,
+        totalHT: source.totalHT,
+        totalTVA: source.totalTVA,
+        totalTTC: source.totalTTC,
+        convertedFromQuoteId: source.id,
         lines: {
-          create: quote.lines.map((line) => ({
+          create: source.lines.map((line) => ({
             type: line.type,
             description: line.description,
             stockItemId: line.stockItemId,
+            vehicleId: line.vehicleId,
             quantity: line.quantity,
             unitPriceHT: line.unitPriceHT,
             vatRate: line.vatRate,
@@ -299,6 +327,6 @@ export async function convertQuoteToInvoice(quoteId: string) {
   });
 
   revalidatePath("/documents/factures");
-  revalidatePath(`/documents/devis/${quoteId}`);
+  revalidatePath(`${DOCUMENT_BASE_PATH[invoice.kind]}`);
   redirect(`/documents/factures/${invoice.id}`);
 }

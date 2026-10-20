@@ -14,25 +14,29 @@ datasource db {
 // Réglages de l'entreprise (mono-garage pour le MVP)
 // -----------------------------------------------------------------------------
 model Company {
-  id                String   @id @default(cuid())
-  name              String
-  address           String
-  postalCode        String
-  city              String
-  siret             String
-  vatNumber         String?
-  phone             String?
-  email             String?
-  iban              String?
-  logoUrl           String?
-  quotePrefix       String   @default("DEV")
-  invoicePrefix     String   @default("FA")
-  nextQuoteNumber   Int      @default(1)
-  nextInvoiceNumber Int      @default(1)
+  id                   String   @id @default(cuid())
+  name                 String
+  address              String
+  postalCode           String
+  city                 String
+  siret                String
+  vatNumber            String?
+  phone                String?
+  email                String?
+  iban                 String?
+  logoUrl              String?
+  quotePrefix          String   @default("DEV")
+  invoicePrefix        String   @default("FA")
+  orderPrefix          String   @default("BC")
+  creditNotePrefix     String   @default("AV")
+  nextQuoteNumber      Int      @default(1)
+  nextInvoiceNumber    Int      @default(1)
+  nextOrderNumber      Int      @default(1)
+  nextCreditNoteNumber Int      @default(1)
   // Jeton secret utilisé dans l'URL du flux iCal (abonnement Google Agenda en lecture seule).
-  calendarFeedToken String?  @unique
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  calendarFeedToken    String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 enum UserRole {
@@ -87,10 +91,10 @@ enum FuelType {
 }
 
 model Vehicle {
-  id                      String    @id @default(cuid())
+  id                      String      @id @default(cuid())
   clientId                String?
-  client                  Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  plate                   String    @unique
+  client                  Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  plate                   String      @unique
   stockNumber             String?
   brand                   String
   model                   String
@@ -102,22 +106,23 @@ model Vehicle {
   fiscalHorsepower        Int?
   co2Emissions            Int?
   mileage                 Int?
-  fuelType                FuelType  @default(AUTRE)
+  fuelType                FuelType    @default(AUTRE)
   purchaseDate            DateTime?
-  purchasePrice           Decimal?  @db.Decimal(10, 2)
+  purchasePrice           Decimal?    @db.Decimal(10, 2)
   sellerType              ClientType?
   sellerName              String?
-  salePrice               Decimal?  @db.Decimal(10, 2)
-  options                 String[]  @default([])
-  adCopy                  String?   @db.Text
+  salePrice               Decimal?    @db.Decimal(10, 2)
+  options                 String[]    @default([])
+  adCopy                  String?     @db.Text
   notes                   String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
 
-  documents    Document[]
-  notesLog     VehicleNote[]
-  photos       VehiclePhoto[]
-  appointments Appointment[]
+  documents     Document[]
+  documentLines DocumentLine[] @relation("DocumentLineVehicle")
+  notesLog      VehicleNote[]
+  photos        VehiclePhoto[]
+  appointments  Appointment[]
 }
 
 model VehicleNote {
@@ -157,9 +162,24 @@ model StockItem {
   documentLines DocumentLine[]
 }
 
+// Catalogue d'articles et prestations facturables sans suivi de quantité
+// (main d'œuvre, livraison, frais de carte grise, etc.), géré depuis les réglages
+// et utilisé comme raccourci de remplissage des lignes de devis/factures.
+model ServiceItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  priceHT     Decimal  @db.Decimal(10, 2)
+  vatRate     Decimal  @default(20) @db.Decimal(5, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum DocumentKind {
   QUOTE
+  ORDER
   INVOICE
+  CREDIT_NOTE
 }
 
 enum DocumentStatus {
@@ -209,6 +229,7 @@ model Document {
 enum LineType {
   PART
   LABOR
+  VEHICLE
   OTHER
 }
 
@@ -220,6 +241,8 @@ model DocumentLine {
   description String
   stockItemId String?
   stockItem   StockItem? @relation(fields: [stockItemId], references: [id])
+  vehicleId   String?
+  vehicle     Vehicle?   @relation("DocumentLineVehicle", fields: [vehicleId], references: [id])
   quantity    Decimal    @default(1) @db.Decimal(10, 2)
   unitPriceHT Decimal    @db.Decimal(10, 2)
   vatRate     Decimal    @default(20) @db.Decimal(5, 2)
@@ -236,11 +259,11 @@ enum AppointmentType {
 }
 
 model Appointment {
-  id         String          @id @default(cuid())
-  title      String
-  type       AppointmentType @default(AUTRE)
-  startAt    DateTime
-  endAt      DateTime?
+  id      String          @id @default(cuid())
+  title   String
+  type    AppointmentType @default(AUTRE)
+  startAt DateTime
+  endAt   DateTime?
 
   clientId  String?
   client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)

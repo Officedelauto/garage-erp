@@ -16,7 +16,9 @@ const CompanySchema = z.object({
   email: z.union([z.email(), z.literal("")]).optional(),
   iban: z.string().trim().optional(),
   quotePrefix: z.string().trim().min(1).default("DEV"),
+  orderPrefix: z.string().trim().min(1).default("BC"),
   invoicePrefix: z.string().trim().min(1).default("FA"),
+  creditNotePrefix: z.string().trim().min(1).default("AV"),
 });
 
 export type CompanyFormState = { error?: string; success?: boolean } | undefined;
@@ -35,7 +37,9 @@ export async function updateCompany(_prevState: CompanyFormState, formData: Form
     email: formData.get("email") || "",
     iban: formData.get("iban") || undefined,
     quotePrefix: formData.get("quotePrefix") || "DEV",
+    orderPrefix: formData.get("orderPrefix") || "BC",
     invoicePrefix: formData.get("invoicePrefix") || "FA",
+    creditNotePrefix: formData.get("creditNotePrefix") || "AV",
   });
 
   if (!parsed.success) {

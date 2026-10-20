@@ -3,6 +3,7 @@ import { clientDisplayName, formatDate, formatEur } from "@/lib/utils";
 const LINE_TYPE_LABELS: Record<string, string> = {
   PART: "Pièce",
   LABOR: "Main d'œuvre",
+  VEHICLE: "Véhicule",
   OTHER: "Autre",
 };
 

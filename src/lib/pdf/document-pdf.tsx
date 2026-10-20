@@ -29,7 +29,15 @@ const styles = StyleSheet.create({
 const LINE_TYPE_LABELS: Record<string, string> = {
   PART: "Pièce",
   LABOR: "Main d'œuvre",
+  VEHICLE: "Véhicule",
   OTHER: "Autre",
+};
+
+const KIND_TITLES: Record<string, string> = {
+  QUOTE: "DEVIS",
+  ORDER: "BON DE COMMANDE",
+  INVOICE: "FACTURE",
+  CREDIT_NOTE: "AVOIR",
 };
 
 const eur = pdfEur;
@@ -52,7 +60,7 @@ type CompanySnapshot = {
 };
 
 export type DocumentPdfProps = {
-  kind: "QUOTE" | "INVOICE";
+  kind: "QUOTE" | "ORDER" | "INVOICE" | "CREDIT_NOTE";
   number: string | null;
   issueDate: Date | string | null;
   dueDate: Date | string | null;
@@ -82,7 +90,7 @@ export type DocumentPdfProps = {
 };
 
 export function DocumentPdf({ kind, number, issueDate, dueDate, company, client, vehicle, lines, totalHT, totalTVA, totalTTC }: DocumentPdfProps) {
-  const title = kind === "QUOTE" ? "DEVIS" : "FACTURE";
+  const title = KIND_TITLES[kind] ?? kind;
   const clientName =
     client.type === "PROFESSIONNEL" ? client.companyName : `${client.firstName ?? ""} ${client.lastName ?? ""}`.trim();
 
