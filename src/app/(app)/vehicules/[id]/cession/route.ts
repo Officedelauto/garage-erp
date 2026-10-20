@@ -1,11 +1,11 @@
 import { verifySession } from "@/lib/dal";
-import { renderCessionPdf } from "@/lib/pdf/render-cession";
+import { renderCessionCerfaPdf } from "@/lib/pdf/render-cession-cerfa";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await verifySession();
   const { id } = await params;
 
-  const result = await renderCessionPdf(id);
+  const result = await renderCessionCerfaPdf(id);
   if (!result) {
     return new Response("Véhicule introuvable.", { status: 404 });
   }
