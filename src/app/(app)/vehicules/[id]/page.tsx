@@ -87,6 +87,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </Button>
             </Link>
           )}
+          <Link href={`/vehicules/${vehicle.id}/cession`} target="_blank">
+            <Button variant="outline" size="sm">
+              Déclaration de cession
+            </Button>
+          </Link>
           <DeleteButton action={boundDelete} confirmMessage="Supprimer ce véhicule ?" />
         </div>
       </div>
