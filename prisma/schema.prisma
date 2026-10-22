@@ -14,7 +14,7 @@ datasource db {
 // Réglages de l'entreprise (mono-garage pour le MVP)
 // -----------------------------------------------------------------------------
 model Company {
-  id                   String   @id @default(cuid())
+  id                   String         @id @default(cuid())
   name                 String
   address              String
   postalCode           String
@@ -25,18 +25,26 @@ model Company {
   email                String?
   iban                 String?
   logoUrl              String?
-  quotePrefix          String   @default("DEV")
-  invoicePrefix        String   @default("FA")
-  orderPrefix          String   @default("BC")
-  creditNotePrefix     String   @default("AV")
-  nextQuoteNumber      Int      @default(1)
-  nextInvoiceNumber    Int      @default(1)
-  nextOrderNumber      Int      @default(1)
-  nextCreditNoteNumber Int      @default(1)
+  quotePrefix          String         @default("DEV")
+  invoicePrefix        String         @default("FA")
+  orderPrefix          String         @default("BC")
+  creditNotePrefix     String         @default("AV")
+  nextQuoteNumber      Int            @default(1)
+  nextInvoiceNumber    Int            @default(1)
+  nextOrderNumber      Int            @default(1)
+  nextCreditNoteNumber Int            @default(1)
+  // Modèle de mise en page utilisé pour l'affiche prix PDF des véhicules.
+  posterTemplate       PosterTemplate @default(CLASSIQUE)
   // Jeton secret utilisé dans l'URL du flux iCal (abonnement Google Agenda en lecture seule).
-  calendarFeedToken    String?  @unique
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  calendarFeedToken    String?        @unique
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+enum PosterTemplate {
+  CLASSIQUE
+  MODERNE
+  MINIMALISTE
 }
 
 enum UserRole {

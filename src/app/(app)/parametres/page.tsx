@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { CompanyForm } from "./company-form";
 import { CompanyLogoForm } from "@/components/settings/company-logo-form";
+import { PosterTemplateForm } from "@/components/settings/poster-template-form";
 import { CalendarFeedSettings } from "@/components/settings/calendar-feed-settings";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +36,11 @@ export default async function SettingsPage() {
       <div className="mb-6">
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Logo</h2>
         <CompanyLogoForm logoUrl={company?.logoUrl ?? null} />
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Modèle d&apos;affiche prix</h2>
+        <PosterTemplateForm current={company?.posterTemplate ?? "CLASSIQUE"} />
       </div>
 
       <CompanyForm

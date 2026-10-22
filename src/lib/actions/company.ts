@@ -58,3 +58,21 @@ export async function updateCompany(_prevState: CompanyFormState, formData: Form
   revalidatePath("/parametres");
   return { success: true };
 }
+
+const POSTER_TEMPLATES = ["CLASSIQUE", "MODERNE", "MINIMALISTE"] as const;
+
+export async function updatePosterTemplate(formData: FormData) {
+  await verifySession();
+  const template = formData.get("posterTemplate");
+  if (typeof template !== "string" || !(POSTER_TEMPLATES as readonly string[]).includes(template)) return;
+
+  const existing = await prisma.company.findFirst();
+  if (!existing) return;
+
+  await prisma.company.update({
+    where: { id: existing.id },
+    data: { posterTemplate: template as (typeof POSTER_TEMPLATES)[number] },
+  });
+
+  revalidatePath("/parametres");
+}

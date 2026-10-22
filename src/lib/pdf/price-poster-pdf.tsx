@@ -1,5 +1,6 @@
 import { Document as PdfDocument, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { pdfEur0, pdfNumber } from "@/lib/pdf/pdf-format";
+import { frMonthYear, FUEL_LABELS, type PricePosterProps } from "@/lib/pdf/price-poster-shared";
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontFamily: "Helvetica", color: "#1e293b" },
@@ -9,10 +10,10 @@ const styles = StyleSheet.create({
   companyName: { fontSize: 12, fontWeight: 700 },
   companyMuted: { fontSize: 8, color: "#64748b" },
 
-  photo: { width: "100%", height: 250, objectFit: "cover", borderRadius: 6, marginBottom: 16 },
+  photo: { width: "100%", height: 230, objectFit: "cover", borderRadius: 6, marginBottom: 16 },
   photoPlaceholder: {
     width: "100%",
-    height: 250,
+    height: 230,
     marginBottom: 16,
     border: "1px dashed #cbd5e1",
     borderRadius: 6,
@@ -28,12 +29,12 @@ const styles = StyleSheet.create({
 
   // Bloc mentions obligatoires (arrêté du 18 juin 1991) : caractères apparents,
   // de dimensions similaires entre eux.
-  legalBox: { border: "1px solid #1e293b", borderRadius: 4, padding: 12, marginBottom: 16 },
+  legalBox: { border: "1px solid #1e293b", borderRadius: 4, padding: 12, marginBottom: 14 },
   legalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
   legalLabel: { fontSize: 10, color: "#475569" },
   legalValue: { fontSize: 10, fontWeight: 700 },
 
-  specsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 4 },
+  specsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 4, marginBottom: 14 },
   specBox: {
     border: "1px solid #e2e8f0",
     borderRadius: 6,
@@ -45,48 +46,27 @@ const styles = StyleSheet.create({
   specLabel: { fontSize: 7, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 },
   specValue: { fontSize: 11, fontWeight: 700 },
 
-  footer: { marginTop: 24, fontSize: 7, color: "#94a3b8", textAlign: "center" },
+  optionsTitle: { fontSize: 8, color: "#94a3b8", textTransform: "uppercase", marginBottom: 5 },
+  optionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+  optionChip: {
+    fontSize: 8,
+    color: "#334155",
+    backgroundColor: "#f1f5f9",
+    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    margin: 2,
+  },
+
+  footer: { marginTop: 18, fontSize: 7, color: "#94a3b8", textAlign: "center" },
 });
-
-function frMonthYear(d: Date | string | null | undefined) {
-  if (!d) return null;
-  return new Intl.DateTimeFormat("fr-FR", { month: "2-digit", year: "numeric" }).format(new Date(d));
-}
-
-export type PricePosterProps = {
-  companyName: string;
-  companySiret: string;
-  companyAddress: string;
-  companyCity: string;
-  logoPath?: string | null;
-  brand: string;
-  model: string;
-  trim?: string | null;
-  plate: string;
-  price: string | number;
-  mileage?: number | null;
-  firstRegistrationDate?: Date | string | null;
-  fuelType?: string;
-  fiscalHorsepower?: number | null;
-  co2Emissions?: number | null;
-  color?: string | null;
-  photoPath?: string | null;
-};
-
-const FUEL_LABELS: Record<string, string> = {
-  ESSENCE: "Essence",
-  DIESEL: "Diesel",
-  HYBRIDE: "Hybride",
-  ELECTRIQUE: "Électrique",
-  GPL: "GPL",
-  AUTRE: "Autre",
-};
 
 export function PricePosterPdf({
   companyName,
   companySiret,
   companyAddress,
   companyCity,
+  companyPhone,
   logoPath,
   brand,
   model,
@@ -99,6 +79,7 @@ export function PricePosterPdf({
   fiscalHorsepower,
   co2Emissions,
   color,
+  options,
   photoPath,
 }: PricePosterProps) {
   const saleDenomination = [brand, model, trim].filter(Boolean).join(" ");
@@ -107,7 +88,7 @@ export function PricePosterPdf({
   const specs = [
     fuelType ? { label: "Carburant", value: FUEL_LABELS[fuelType] ?? fuelType } : null,
     fiscalHorsepower ? { label: "CV fiscaux", value: `${fiscalHorsepower} CV` } : null,
-    co2Emissions != null ? { label: "CO2", value: `${pdfNumber(co2Emissions)} g/km` } : null,
+    { label: "CO2", value: co2Emissions != null ? `${pdfNumber(co2Emissions)} g/km` : "Non communiqué" },
     color ? { label: "Couleur", value: color } : null,
     { label: "Immatriculation", value: plate },
   ].filter(Boolean) as { label: string; value: string }[];
@@ -125,7 +106,10 @@ export function PricePosterPdf({
           <View style={styles.companyBlock}>
             {logoPath && <Text style={styles.companyName}>{companyName}</Text>}
             <Text style={styles.companyMuted}>{companyAddress} — {companyCity}</Text>
-            <Text style={styles.companyMuted}>SIRET {companySiret}</Text>
+            <Text style={styles.companyMuted}>
+              SIRET {companySiret}
+              {companyPhone ? ` — ${companyPhone}` : ""}
+            </Text>
           </View>
         </View>
 
@@ -160,6 +144,10 @@ export function PricePosterPdf({
             </Text>
           </View>
           <View style={styles.legalRow}>
+            <Text style={styles.legalLabel}>Émissions de CO2</Text>
+            <Text style={styles.legalValue}>{co2Emissions != null ? `${pdfNumber(co2Emissions)} g/km` : "Non communiquées"}</Text>
+          </View>
+          <View style={styles.legalRow}>
             <Text style={styles.legalLabel}>Prix de vente TTC</Text>
             <Text style={styles.legalValue}>{pdfEur0(price)}</Text>
           </View>
@@ -173,6 +161,17 @@ export function PricePosterPdf({
             </View>
           ))}
         </View>
+
+        {options && options.length > 0 && (
+          <View>
+            <Text style={styles.optionsTitle}>Équipements</Text>
+            <View style={styles.optionsGrid}>
+              {options.map((opt) => (
+                <Text key={opt} style={styles.optionChip}>{opt}</Text>
+              ))}
+            </View>
+          </View>
+        )}
 
         <Text style={styles.footer}>
           Prix toutes taxes comprises, hors coût du certificat d&apos;immatriculation. Kilométrage non garanti.{"\n"}

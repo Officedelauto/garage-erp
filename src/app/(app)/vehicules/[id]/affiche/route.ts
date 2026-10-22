@@ -1,11 +1,13 @@
 import { verifySession } from "@/lib/dal";
-import { renderPricePosterPdf } from "@/lib/pdf/render-price-poster";
+import { renderPricePosterPdf, isPosterTemplateChoice } from "@/lib/pdf/render-price-poster";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await verifySession();
   const { id } = await params;
+  const templateParam = new URL(req.url).searchParams.get("template");
+  const template = isPosterTemplateChoice(templateParam) ? templateParam : undefined;
 
-  const result = await renderPricePosterPdf(id);
+  const result = await renderPricePosterPdf(id, template);
   if (!result) {
     return new Response("Véhicule introuvable ou prix de vente non renseigné.", { status: 404 });
   }
