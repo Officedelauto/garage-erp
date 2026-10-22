@@ -59,7 +59,7 @@ export async function updateCompany(_prevState: CompanyFormState, formData: Form
   return { success: true };
 }
 
-const POSTER_TEMPLATES = ["CLASSIQUE", "MODERNE", "MINIMALISTE"] as const;
+const POSTER_TEMPLATES = ["CLASSIQUE", "MODERNE", "MINIMALISTE", "ETIQUETTE"] as const;
 
 export async function updatePosterTemplate(formData: FormData) {
   await verifySession();

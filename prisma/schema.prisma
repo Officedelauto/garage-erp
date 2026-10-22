@@ -45,6 +45,7 @@ enum PosterTemplate {
   CLASSIQUE
   MODERNE
   MINIMALISTE
+  ETIQUETTE
 }
 
 enum UserRole {
