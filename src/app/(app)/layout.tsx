@@ -10,9 +10,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside className="sticky top-0 h-screen w-64 shrink-0 overflow-y-auto bg-ink-950 p-4 flex flex-col">
-        <div className="mb-4 px-2">
+        <div className="mb-5 px-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo statique, dimensions fixes connues */}
-          <img src="/brand/octane-connect-logo.png" alt="Octane Connect" className="h-7 w-auto" />
+          <img src="/brand/octane-connect-logo.png" alt="Octane Connect" className="h-11 w-auto" />
         </div>
         <div className="mb-4">
           <VocalAssistantButton />
