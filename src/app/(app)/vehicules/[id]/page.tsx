@@ -174,6 +174,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           co2Emissions: vehicle.co2Emissions?.toString() ?? "",
           mileage: vehicle.mileage?.toString() ?? "",
           fuelType: vehicle.fuelType,
+          transmission: vehicle.transmission ?? "",
+          warranty: vehicle.warranty ?? "",
           purchaseDate: formatDateInput(vehicle.purchaseDate),
           purchasePrice: vehicle.purchasePrice?.toString() ?? "",
           sellerType: vehicle.sellerType ?? "",

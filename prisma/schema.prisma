@@ -46,6 +46,7 @@ enum PosterTemplate {
   MODERNE
   MINIMALISTE
   ETIQUETTE
+  TABLEAU
 }
 
 enum UserRole {
@@ -125,6 +126,8 @@ model Vehicle {
   co2Emissions            Int?
   mileage                 Int?
   fuelType                FuelType    @default(AUTRE)
+  transmission            String?
+  warranty                String?
   purchaseDate            DateTime?
   purchasePrice           Decimal?    @db.Decimal(10, 2)
   sellerType              ClientType?

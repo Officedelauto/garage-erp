@@ -5,6 +5,7 @@ import { PricePosterPdf } from "@/lib/pdf/price-poster-pdf";
 import { PricePosterModernPdf } from "@/lib/pdf/price-poster-modern-pdf";
 import { PricePosterMinimalPdf } from "@/lib/pdf/price-poster-minimal-pdf";
 import { PricePosterTagPdf } from "@/lib/pdf/price-poster-tag-pdf";
+import { PricePosterTablePdf } from "@/lib/pdf/price-poster-table-pdf";
 import type { PricePosterProps } from "@/lib/pdf/price-poster-shared";
 
 const TEMPLATES = {
@@ -12,6 +13,7 @@ const TEMPLATES = {
   MODERNE: PricePosterModernPdf,
   MINIMALISTE: PricePosterMinimalPdf,
   ETIQUETTE: PricePosterTagPdf,
+  TABLEAU: PricePosterTablePdf,
 } as const;
 
 export type PosterTemplateChoice = keyof typeof TEMPLATES;
@@ -53,6 +55,9 @@ export async function renderPricePosterPdf(vehicleId: string, templateOverride?:
     fiscalHorsepower: vehicle.fiscalHorsepower,
     co2Emissions: vehicle.co2Emissions,
     color: vehicle.color,
+    transmission: vehicle.transmission,
+    warranty: vehicle.warranty,
+    stockNumber: vehicle.stockNumber,
     options: vehicle.options,
     photoPath,
   };

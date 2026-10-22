@@ -30,6 +30,9 @@ export type PricePosterProps = {
   fiscalHorsepower?: number | null;
   co2Emissions?: number | null;
   color?: string | null;
+  transmission?: string | null;
+  warranty?: string | null;
+  stockNumber?: string | null;
   options?: string[];
   photoPath?: string | null;
 };

@@ -22,6 +22,8 @@ export type VehicleDefaults = {
   co2Emissions: string;
   mileage: string;
   fuelType: string;
+  transmission: string;
+  warranty: string;
   purchaseDate: string;
   purchasePrice: string;
   sellerType: string;
@@ -46,6 +48,8 @@ const emptyDefaults: VehicleDefaults = {
   co2Emissions: "",
   mileage: "",
   fuelType: "AUTRE",
+  transmission: "",
+  warranty: "",
   purchaseDate: "",
   purchasePrice: "",
   sellerType: "",
@@ -188,6 +192,19 @@ export function VehicleForm({
               </option>
             ))}
           </Select>
+        </div>
+        <div>
+          <Label htmlFor="transmission">Boîte de vitesses</Label>
+          <Input
+            id="transmission"
+            name="transmission"
+            defaultValue={d.transmission}
+            placeholder="Ex : Automatique DSG 7 vitesses"
+          />
+        </div>
+        <div>
+          <Label htmlFor="warranty">Garantie</Label>
+          <Input id="warranty" name="warranty" defaultValue={d.warranty} placeholder="Ex : 6 mois commerciale" />
         </div>
       </div>
 

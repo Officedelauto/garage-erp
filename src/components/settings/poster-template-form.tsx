@@ -23,12 +23,17 @@ const TEMPLATES = [
     label: "Étiquette",
     description: "Bandeau marque/modèle bleu, grille d'informations et bloc options, façon étiquette de pare-brise.",
   },
+  {
+    value: "TABLEAU",
+    label: "Tableau",
+    description: "Tableau de caractéristiques en grille grise/blanche, liste d'équipements, gros encadré prix.",
+  },
 ] as const;
 
 export function PosterTemplateForm({ current }: { current: string }) {
   return (
     <form action={updatePosterTemplate} className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {TEMPLATES.map((t) => (
           <label
             key={t.value}
