@@ -29,6 +29,7 @@ export type VehicleDefaults = {
   sellerType: string;
   sellerName: string;
   salePrice: string;
+  saleDate: string;
   options: string[];
   notes: string;
 };
@@ -55,6 +56,7 @@ const emptyDefaults: VehicleDefaults = {
   sellerType: "",
   sellerName: "",
   salePrice: "",
+  saleDate: "",
   options: [],
   notes: "",
 };
@@ -212,6 +214,10 @@ export function VehicleForm({
         <div>
           <Label htmlFor="salePrice">Prix de vente (€)</Label>
           <Input id="salePrice" name="salePrice" type="number" step="0.01" defaultValue={d.salePrice} />
+        </div>
+        <div>
+          <Label htmlFor="saleDate">Date de vente</Label>
+          <Input id="saleDate" name="saleDate" type="date" defaultValue={d.saleDate} />
         </div>
       </div>
 

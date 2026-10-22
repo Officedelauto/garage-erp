@@ -18,6 +18,7 @@ import {
   IdCard,
   Settings,
   UserCircle,
+  BookOpen,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -56,6 +57,7 @@ const nav: NavEntry[] = [
     icon: Settings,
     items: [
       { href: "/parametres", label: "Paramètres", icon: Settings },
+      { href: "/livre-de-police", label: "Livre de police", icon: BookOpen },
       { href: "/compte", label: "Compte", icon: UserCircle },
     ],
   },

@@ -181,6 +181,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           sellerType: vehicle.sellerType ?? "",
           sellerName: vehicle.sellerName ?? "",
           salePrice: vehicle.salePrice?.toString() ?? "",
+          saleDate: formatDateInput(vehicle.saleDate),
           options: vehicle.options,
           notes: vehicle.notes ?? "",
         }}

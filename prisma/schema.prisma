@@ -133,6 +133,8 @@ model Vehicle {
   sellerType              ClientType?
   sellerName              String?
   salePrice               Decimal?    @db.Decimal(10, 2)
+  // Date de vente effective, pour le livre de police (registre des objets mobiliers).
+  saleDate                DateTime?
   options                 String[]    @default([])
   adCopy                  String?     @db.Text
   notes                   String?

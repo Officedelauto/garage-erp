@@ -374,6 +374,7 @@ export async function convertDocumentToInvoice(sourceId: string) {
         where: { id: vehicleId },
         data: {
           clientId: source.clientId,
+          saleDate: new Date(),
           reservedByClientId: null,
           depositAmount: null,
           depositPaymentMethod: null,

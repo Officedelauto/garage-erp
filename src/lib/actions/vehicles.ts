@@ -35,6 +35,7 @@ const VehicleSchema = z.object({
   sellerType: z.enum(SELLER_TYPES).optional(),
   sellerName: z.string().trim().optional(),
   salePrice: z.coerce.number().optional(),
+  saleDate: z.coerce.date().optional(),
   options: z.array(z.string()).optional(),
   notes: z.string().trim().optional(),
 });
@@ -64,6 +65,7 @@ function parseVehicleForm(formData: FormData) {
     sellerType: formData.get("sellerType") || undefined,
     sellerName: formData.get("sellerName") || undefined,
     salePrice: formData.get("salePrice") || undefined,
+    saleDate: formData.get("saleDate") || undefined,
     options: formData.getAll("options") as string[],
     notes: formData.get("notes") || undefined,
   });

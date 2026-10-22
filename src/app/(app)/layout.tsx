@@ -8,8 +8,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await verifySession();
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="sticky top-0 h-screen w-64 shrink-0 overflow-y-auto bg-ink-950 p-4 flex flex-col">
+    <div className="flex min-h-screen bg-slate-50 print:bg-white">
+      <aside className="sticky top-0 h-screen w-64 shrink-0 overflow-y-auto bg-ink-950 p-4 flex flex-col print:hidden">
         <div className="mb-5 px-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo statique, dimensions fixes connues */}
           <img src="/brand/octane-connect-logo.png" alt="Octane Connect" className="h-11 w-auto" />
@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </form>
         </div>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 p-6 print:p-0">{children}</main>
     </div>
   );
 }
