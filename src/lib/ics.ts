@@ -20,7 +20,7 @@ export function buildIcsFeed(calendarName: string, events: IcsEvent[]) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Garage ERP//FR",
+    "PRODID:-//Octane Connect//FR",
     "CALSCALE:GREGORIAN",
     `X-WR-CALNAME:${escapeIcsText(calendarName)}`,
   ];

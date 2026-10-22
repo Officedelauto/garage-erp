@@ -81,7 +81,7 @@ export function AttestationPdf({ company, client, vehicle, intervention, issuedA
           </View>
         </View>
 
-        <Text style={styles.footer}>Document généré par Garage ERP</Text>
+        <Text style={styles.footer}>Document généré par Octane Connect</Text>
       </Page>
     </PdfDocument>
   );

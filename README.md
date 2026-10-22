@@ -1,4 +1,4 @@
-# Garage ERP
+# Octane Connect
 
 Gestion de garage automobile : clients, véhicules, stock, devis/factures conformes, tableau de bord, et SAV intelligent (DeepSeek).
 

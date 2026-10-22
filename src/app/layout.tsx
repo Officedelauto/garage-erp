@@ -13,7 +13,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Garage ERP",
+  title: "Octane Connect",
   description: "Gestion de garage : clients, véhicules, stock, devis et factures.",
 };
 

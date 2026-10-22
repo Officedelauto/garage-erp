@@ -175,7 +175,7 @@ export function PricePosterPdf({
 
         <Text style={styles.footer}>
           Prix toutes taxes comprises, hors coût du certificat d&apos;immatriculation. Kilométrage non garanti.{"\n"}
-          {companyName} — {companyAddress}, {companyCity} — SIRET {companySiret} — document généré par Garage ERP
+          {companyName} — {companyAddress}, {companyCity} — SIRET {companySiret} — document généré par Octane Connect
         </Text>
       </Page>
     </PdfDocument>
